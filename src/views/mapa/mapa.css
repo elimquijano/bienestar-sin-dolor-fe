@@ -1,0 +1,57 @@
+.mapa {
+    width: 1450px;
+    height: 700px;
+    border: none;
+    border-radius: 1%;
+     
+}
+.Frist-Ubication h2 {
+    color: red ;
+}
+.Frist-Ubication p {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+
+.Second-Ubication h2 {
+    color: blue;    
+}
+.Second-Ubication p {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+
+.Third-Ubication h2 {
+    color: green;
+}
+.Third-Ubication p {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+
+
+.Fourth-Ubication h2 {
+    color: violet ;
+}
+.Fourth-Ubication  {
+font-size: 15px;
+font-weight: bold;
+}
+
+.Fifth-Ubication h2 {
+    color: orange;
+}
+
+.Fifth-Ubication {
+    font-size: 15px;
+    font-weight: bold;
+}
+marker {
+    background-color: aqua;
+}
+.btn-azul{
+    background-color: blue;
+}
