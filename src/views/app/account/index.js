@@ -27,7 +27,7 @@ import {
 } from '@mui/icons-material';
 
 import { API_HOST, API_URL_USER, createSession, getSession, notificationSwal, redirectToRelativePage } from 'common/common';
-import AppContentHeader from 'layout/AppLayout/HeaderContent';
+import AppContentHeader from 'layout/MainLayout/HeaderContent';
 
 function AccountScreen() {
   const theme = useTheme();
@@ -42,32 +42,16 @@ function AccountScreen() {
   }, []);
 
   const cargaInicial = () => {
-    const storedUserMail = getSession('USER_MAIL');
-    const userEmailWithoutQuotes = storedUserMail.replace(/^"(.*)"$/, '$1');
-
-    var requestOptions = {
-      method: 'GET',
-      redirect: 'follow'
-    };
-
-    fetch(API_URL_USER + '?form_email=' + userEmailWithoutQuotes, requestOptions)
-      .then((response) => response.json())
-      .then((result) => {
-        setUserData(result.data[0]);
-      })
-      .catch((error) => console.log('error', error));
+    setUserData(getSession('USER_SESSION'));
   };
 
   const handleEditUserData = () => {
     // Abre el modal y carga los datos actuales en el estado de edición
     setEditData({
       name: userData.name,
-      ape_p: userData.ape_p,
-      ape_m: userData.ape_m,
       dni: userData.dni,
       phone: userData.phone,
-      avatarFile: userData.avatarFile,
-      birthDate: userData.birthDate,
+      birthdate: userData.birthdate,
       gender: userData.gender
     });
 
@@ -180,7 +164,7 @@ function AccountScreen() {
         flexDirection: 'column'
       }}
     >
-      <AppContentHeader />
+      <AppContentHeader isDark={false} />
       {userData && (
         <Box sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', overflowY: 'auto' }}>
@@ -188,14 +172,15 @@ function AccountScreen() {
               sx={{
                 alignItems: 'center',
                 padding: 2,
-                width: '100%'
+                width: '100%',
+                backgroundColor: theme.palette.secondary.main
               }}
             >
               <Avatar
-                src={API_HOST + getSession('USER_AVATAR')}
+                src={API_HOST + userData.image || ''}
                 sx={{
-                  width: 128,
-                  height: 128,
+                  width: 100,
+                  height: 100,
                   margin: '0 auto',
                   backgroundColor: theme.palette.secondary.main
                 }}
@@ -206,24 +191,24 @@ function AccountScreen() {
                   fontWeight: 'bold',
                   textAlign: 'center',
                   marginTop: 1,
-                  color: theme.palette.secondary.main
+                  color: theme.palette.background.default
                 }}
               >
-                {userData.name} {userData.ape_p} {userData.ape_m}
+                {userData?.firstname} {userData?.lastname}
               </Typography>
             </Box>
-            <Paper sx={{ margin: 2, padding: 3 }}>
+            <Paper sx={{ margin: 2, padding: 2 }}>
               {/* Nombre */}
               <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
                 <PersonIcon sx={{ color: 'secondary.main', marginRight: 1 }} />
-                <TextField label="Nombre" value={userData.name} variant="standard" InputProps={{ readOnly: true }} fullWidth />
+                <TextField label="Nombre" value={userData.firstname || ''} variant="standard" InputProps={{ readOnly: true }} fullWidth />
               </Box>
               {/* Apellido */}
               <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
                 <PersonOutlineIcon sx={{ color: 'secondary.main', marginRight: 1 }} />
                 <TextField
-                  label="Apellido"
-                  value={`${userData?.ape_p || ''} ${userData?.ape_m || ''}`}
+                  label="Apellidos"
+                  value={`${userData?.lastname || ''}`}
                   variant="standard"
                   InputProps={{ readOnly: true }}
                   fullWidth
@@ -239,7 +224,7 @@ function AccountScreen() {
                 <DateRangeIcon sx={{ color: 'secondary.main', marginRight: 1 }} />
                 <TextField
                   label="Fecha de Nacimiento"
-                  value={userData.birthDate || ''}
+                  value={userData.birthdate || ''}
                   variant="standard"
                   InputProps={{ readOnly: true }}
                   fullWidth
@@ -248,19 +233,13 @@ function AccountScreen() {
               {/* Género */}
               <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
                 <WcIcon sx={{ color: 'secondary.main', marginRight: 1 }} />
-                <TextField
-                  label="Género"
-                  value={userData?.gender || 'Masculino'}
-                  variant="standard"
-                  InputProps={{ readOnly: true }}
-                  fullWidth
-                />
+                <TextField label="Género" value={userData?.gender || ''} variant="standard" InputProps={{ readOnly: true }} fullWidth />
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'center', paddingY: 3, gap: 2 }}>
-                <Button disabled color="secondary" variant="outlined" onClick={handleEditUserData} startIcon={<EditIcon />}>
+                <Button color="secondary" variant="outlined" onClick={handleEditUserData} startIcon={<EditIcon />}>
                   Editar Datos
                 </Button>
-                <Button disabled color="secondary" variant="outlined" onClick={handleOpenModal2} startIcon={<PasswordIcon />}>
+                <Button color="secondary" variant="outlined" onClick={handleOpenModal2} startIcon={<PasswordIcon />}>
                   Cambiar Contraseña
                 </Button>
               </Box>

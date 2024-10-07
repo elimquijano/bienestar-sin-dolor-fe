@@ -59,7 +59,7 @@ const ProfileSection = () => {
     deleteSession('USER_MAIL');
     deleteSession('PRIVILEGIOS');
     deleteSession('USER_AVATAR');
-    redirectToRelativePage('/#/admin/login');
+    redirectToRelativePage('/#/login');
   };
 
   const handleClose = (event) => {
@@ -112,7 +112,7 @@ const ProfileSection = () => {
             lineHeight: 0
           }
         }}
-        icon={<img src={API_HOST + getSession('USER_AVATAR')} id="AvatarAdmin" alt="logo admin"></img>}
+        icon={<img src={API_HOST + getSession('USER_SESSION')?.image} id="AvatarAdmin" alt="logo admin"></img>}
         label={<IconSettings stroke={1.5} size="1.5rem" color={theme.palette.primary.main} />}
         variant="outlined"
         ref={anchorRef}
@@ -149,10 +149,10 @@ const ProfileSection = () => {
                       <Stack direction="row" spacing={0.5} alignItems="center">
                         <Typography variant="h4">Hola,</Typography>
                         <Typography component="span" variant="h4" sx={{ fontWeight: 400 }}>
-                          {getSession('USER_NAME')}
+                          {getSession('USER_SESSION')?.firstname}
                         </Typography>
                       </Stack>
-                      <Typography variant="subtitle2">{getSession('USER_MAIL')}</Typography>
+                      <Typography variant="subtitle2">{getSession('USER_SESSION')?.email}</Typography>
                     </Stack>
                     <OutlinedInput
                       sx={{ width: '100%', pr: 1, pl: 2, my: 2 }}
@@ -237,7 +237,7 @@ const ProfileSection = () => {
                         <ListItemButton
                           sx={{ borderRadius: `${customization.borderRadius}px` }}
                           selected={selectedIndex === 0}
-                          onClick={(event) => handleListItemClick(event, 0, '#')}
+                          onClick={(event) => handleListItemClick(event, 0, '/config')}
                         >
                           <ListItemIcon>
                             <IconSettings stroke={1.5} size="1.3rem" />

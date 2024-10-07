@@ -2,13 +2,13 @@ import { Link } from 'react-router-dom';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
-import { Divider, Grid, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Button, Grid, Stack, Typography, useMediaQuery } from '@mui/material';
 
 // project imports
 import AuthWrapper1 from '../AuthWrapper1';
 import AuthCardWrapper from '../AuthCardWrapper';
-import Logo from 'ui-component/Logo';
 import AuthRegister from '../auth-forms/AuthRegister';
+import { CameraAlt, Facebook, Google } from '@mui/icons-material';
 
 // assets
 
@@ -26,11 +26,6 @@ const Register = () => {
             <Grid item sx={{ m: { xs: 1, sm: 3 }, mb: 0 }}>
               <AuthCardWrapper>
                 <Grid container spacing={2} alignItems="center" justifyContent="center">
-                  <Grid item sx={{ mb: 3 }}>
-                    <Link to="#">
-                      <Logo />
-                    </Link>
-                  </Grid>
                   <Grid item xs={12}>
                     <Grid container direction={matchDownSM ? 'column-reverse' : 'row'} alignItems="center" justifyContent="center">
                       <Grid item>
@@ -38,7 +33,7 @@ const Register = () => {
                           <Typography color={theme.palette.secondary.main} gutterBottom variant={matchDownSM ? 'h3' : 'h2'}>
                             Regístrate
                           </Typography>
-                          <Typography variant="caption" fontSize="16px" textAlign={matchDownSM ? 'center' : 'inherit'}>
+                          <Typography variant="caption" fontSize="14px" textAlign={matchDownSM ? 'center' : 'inherit'}>
                             Completa tus datos para crear una cuenta.
                           </Typography>
                         </Stack>
@@ -49,11 +44,31 @@ const Register = () => {
                     <AuthRegister />
                   </Grid>
                   <Grid item xs={12}>
-                    <Divider />
+                    <Grid item container direction="column" alignItems="center" xs={12}>
+                      <Typography variant="subtitle1" sx={{ textDecoration: 'none' }}>
+                        O continúa con
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                  <Grid item container direction="row" justifyContent={'space-around'} alignItems={'center'} xs={12}>
+                    <Button variant="outlined" color={'secondary'}>
+                      <Google />
+                    </Button>
+                    <Button variant="outlined" color={'secondary'}>
+                      <Facebook />
+                    </Button>
+                    <Button variant="outlined" color={'secondary'}>
+                      <CameraAlt />
+                    </Button>
                   </Grid>
                   <Grid item xs={12}>
                     <Grid item container direction="column" alignItems="center" xs={12}>
-                      <Typography component={Link} to="/login" variant="subtitle1" sx={{ textDecoration: 'none' }}>
+                      <Typography
+                        component={Link}
+                        to="/login"
+                        variant="subtitle1"
+                        sx={{ textDecoration: 'none', color: theme.palette.secondary.main }}
+                      >
                         ¿Ya tienes una cuenta?
                       </Typography>
                     </Grid>

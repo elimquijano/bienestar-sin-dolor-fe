@@ -1,5 +1,5 @@
 import React from 'react';
-import { AccountCircle, History, Home } from '@mui/icons-material';
+import { History, Home, Message } from '@mui/icons-material';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import menuItems from 'menu-items';
 import { Link } from 'react-router-dom';
@@ -16,7 +16,13 @@ const AppBarBottom = () => {
   };
 
   return (
-    <BottomNavigation value={value} onChange={handleChange} showLabels style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+    <BottomNavigation
+      value={value}
+      onChange={handleChange}
+      showLabels
+      style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
+      sx={{ display: { xs: 'flex', md: 'none' } }}
+    >
       <BottomNavigationAction
         label="Inicio"
         icon={<Home />}
@@ -44,10 +50,10 @@ const AppBarBottom = () => {
         }}
       />
       <BottomNavigationAction
-        label="Cuenta"
-        icon={<AccountCircle />}
+        label="Mensajes"
+        icon={<Message />}
         component={Link}
-        to="/config"
+        to="/messages"
         onClick={() => setValue(2)}
         sx={{
           color: value === 2 ? theme.palette.secondary.main : 'inherit',

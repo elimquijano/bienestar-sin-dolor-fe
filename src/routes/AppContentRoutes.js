@@ -3,9 +3,13 @@
 import MinimalLayout from 'layout/MinimalLayout';
 import AccountScreen from 'views/app/account';
 import LessonScreen from 'views/app/history/lessons';
-import MapScreen from 'views/app/home/contacto';
 import ChatScreen from 'views/app/home/consulta/chat';
 import VoiceChatScreen from 'views/app/home/consulta/chatvoz';
+import VoiceChatWebScreen from 'views/app/home/consulta/chatvozweb';
+import EspecialistasListScreen from 'views/app/home/contacto';
+import MapNativeScreen from 'views/app/home/contacto/mapa/mapnative';
+import MapWebScreen from 'views/app/home/contacto/mapa/mapweb';
+import TratamientoScreen from 'views/app/home/descarte';
 
 // project imports
 //import Loadable from 'ui-component/Loadable';
@@ -18,20 +22,36 @@ const AppContentRoutes = {
   element: <MinimalLayout />,
   children: [
     {
-      path: '/chat',
+      path: '/chat/:id',
       element: <ChatScreen />
     },
     {
-      path: '/chat-voz',
+      path: '/chat-voz/:id',
       element: <VoiceChatScreen />
+    },
+    {
+      path: '/chat-voz-web',
+      element: <VoiceChatWebScreen />
     },
     {
       path: '/config',
       element: <AccountScreen />
     },
     {
-      path: '/map',
-      element: <MapScreen />
+      path: '/especialistas',
+      element: <EspecialistasListScreen />
+    },
+    {
+      path: '/map/:id',
+      element: <MapNativeScreen />
+    },
+    {
+      path: '/map-web/:id',
+      element: <MapWebScreen />
+    },
+    {
+      path: '/tratamientos',
+      element: <TratamientoScreen />
     },
     {
       path: '/my-lesson/:id',

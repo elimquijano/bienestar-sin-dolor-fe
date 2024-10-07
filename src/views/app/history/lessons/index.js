@@ -2,7 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import LessonsPath from 'ui-component/route';
 import { useTheme } from '@emotion/react';
-import AppContentHeader from 'layout/AppLayout/HeaderContent';
+import AppContentHeader from 'layout/MainLayout/HeaderContent';
 
 const LessonScreen = () => {
   const theme = useTheme();

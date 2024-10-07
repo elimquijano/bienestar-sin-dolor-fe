@@ -1,8 +1,9 @@
 //import { lazy } from 'react';
 
-import AppLayout from 'layout/AppLayout';
+import MainLayout from 'layout/MainLayout';
 import HistoryScreen from 'views/app/history';
 import HomeScreen from 'views/app/home';
+import MessageScreen from 'views/app/messages';
 
 // project imports
 //import Loadable from 'ui-component/Loadable';
@@ -12,7 +13,7 @@ import HomeScreen from 'views/app/home';
 
 const AppRoutes = {
   path: '/',
-  element: <AppLayout />,
+  element: <MainLayout />,
   children: [
     {
       path: '/',
@@ -21,6 +22,10 @@ const AppRoutes = {
     {
       path: '/history',
       element: <HistoryScreen />
+    },
+    {
+      path: '/messages',
+      element: <MessageScreen />
     }
   ]
 };

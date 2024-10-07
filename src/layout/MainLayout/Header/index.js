@@ -33,7 +33,14 @@ const Header = ({ handleLeftDrawerToggle }) => {
         <Box component="span" sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }}>
           <LogoSection />
         </Box>
-        <ButtonBase sx={{ borderRadius: '12px', overflow: 'hidden' }}>
+        {/* ButtonBase solo visible en pantallas grandes */}
+        <ButtonBase
+          sx={{
+            borderRadius: '12px',
+            overflow: 'hidden',
+            display: { xs: 'none', md: 'flex' } // Solo mostrar en pantallas medianas y grandes
+          }}
+        >
           <Avatar
             variant="rounded"
             sx={{

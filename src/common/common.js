@@ -1,14 +1,16 @@
+import axios from 'axios';
 import Swal from 'sweetalert2';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+
 //------------ CONEXIONES AL SERVER DE PRODCCION --------------------
 //export const URL = 'https://ibtel.tech/';
 //export const API_HOST ='https://api.ibtel.tech/';
 //------------ CONEXIONES AL SERVER DE PRUEBA --------------------
 // export const URL = 'https://pruebas.ibtel.tech/';
-// export const API_HOST = 'https://api2.ibtel.tech/';
+export const API_HOST = 'https://elimpruebasapi.nwperu.com/'; // REAL URL
 //------------ CONEXIONES AL SERVER LOCAL --------------------
 
 //  export const URL = 'https://admin.nwperu.com/'; // REAL URL
-export const API_HOST = 'https://adminapi.nwperu.com/'; // REAL URL
 export const URL = 'http://localhost:3000/';
 //export const API_HOST = 'http://localhost:8000/';
 
@@ -18,24 +20,29 @@ export const URL_API_COHERE = 'https://api.cohere.com/v1/chat';
 export const API_KEY_COHERE_AI = 'WrsU1lPWyADMsyRUibCTQCtiEZmD9z22ebHvpWQj';
 
 export const API_URL = API_HOST + 'api/';
+export const API_URL_LOGIN = API_URL + 'login';
+export const API_URL_USER = API_URL + 'user';
 export const API_URL_ROL = API_URL + 'rol';
+export const API_URL_USER_ROL = API_URL + 'roluser';
+export const API_ROL_WITH_USER = API_URL + 'rolwithusers';
+export const API_URL_MODULO = API_URL + 'modulo';
+export const API_URL_PRIVILEGIO = API_URL + 'privilegio';
+export const API_URL_ROL_PRIVILEGIO = API_URL + 'rolprivilegio';
+export const API_URL_PARTICIPANTE = API_URL + 'participante';
+export const API_URL_CONVERSATION = API_URL + 'conversation';
+export const API_URL_MENSAJE = API_URL + 'mensaje';
+
 export const API_URL_PRODUCTO = API_URL + 'producto';
 export const API_URL_CATEGORIA = API_URL + 'categoria';
 export const API_URL_PROVEEDOR = API_URL + 'proveedor';
 export const API_URL_CLIENTE = API_URL + 'cliente';
 export const API_URL_LOCAL = API_URL + 'negocio';
 export const API_URL_EXISTENCIA = API_URL + 'stock';
-export const API_URL_LOGIN = API_URL + 'login';
 export const API_URL_COMPRA = API_URL + 'compra';
 export const API_URL_DETCOMPRA = API_URL + 'detcompra';
 export const API_URL_VENTA = API_URL + 'venta';
 export const API_URL_DETVENTA = API_URL + 'detventa';
-export const API_URL_MODULO = API_URL + 'modulo';
-export const API_URL_PRIVILEGIO = API_URL + 'privilegio';
-export const API_URL_ROL_PRIVILEGIO = API_URL + 'rolprivilegio';
-export const API_URL_USER = API_URL + 'user';
 export const API_URL_CONTACTO = API_URL + 'contacto';
-export const API_URL_USER_ROL = API_URL + 'roluser';
 export const API_URL_DETREPUESTO = API_URL + 'sertecdetrep';
 export const API_URL_MODELOEQUIPO = API_URL + 'modeloequipo';
 export const API_URL_SERVTECNICO = API_URL + 'serviciotecnico';
@@ -360,3 +367,70 @@ export async function descargarDocumento(url, nombreArchivo) {
 export function navigateTo(url) {
   window.location.href = URL + '#/admin/' + url;
 }
+
+export const SpeakTextNative = async (text, setIsSpeaking, language = 'es-ES') => {
+  if (text) {
+    try {
+      setIsSpeaking(true);
+      await TextToSpeech.speak({
+        text: text,
+        lang: language,
+        rate: 1.0,
+        pitch: 1.0,
+        volume: 1.0,
+        category: 'ambient'
+      });
+    } catch (error) {
+      console.error('Error al hablar:', error);
+    } finally {
+      setIsSpeaking(false);
+    }
+  }
+};
+
+export const SpeakTextWeb = (text, setIsSpeaking, language = 'es-ES') => {
+  if (text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language;
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  }
+};
+
+export const ResponseAI = async (
+  userMessage,
+  context = 'Eres un fisioterapeuta y médico experto. Tu tarea es evaluar las dolencias descritas por el usuario y proporcionar orientación inicial. Debes hacer preguntas detalladas para obtener la mayor cantidad de información posible sobre el malestar del usuario. No debes dar recomendaciones específicas hasta haber recopilado suficiente información. No debes realizar más de una pregunta en una sola respuesta, sino una sola pregunta. Pregunta al usuario sobre su malestar: "¿Dónde sientes dolor y cuándo comenzó?" Indaga sobre la naturaleza de la lesión: "¿Cómo ocurrió la lesión? ¿Fue un movimiento brusco, una caída, o algo más?" Pregunta sobre síntomas adicionales: "¿Has notado hinchazón, moretones o limitación en el movimiento?" Indaga sobre tratamientos previos: "¿Has recibido algún tratamiento para este malestar? ¿Qué has probado hasta ahora?" Pregunta sobre actividades: "¿Hay alguna actividad que empeore o mejore el dolor?" Una vez que el usuario haya proporcionado suficiente información, realiza un pre-descarte de lesiones simples, desgarros o fracturas, basándote en los síntomas descritos. Ofrece consejos de rehabilitación básicos y sugiere cuándo es necesario buscar atención médica profesional solo cuando ya no haya más respuestas a sus preguntas del usuario. Si el usuario pregunta por tu creador, solo si pregunta, sino no, responde que fuiste creado por los estudiantes de ingeniería de sistemas de la UNHEVAL: Elim, Johan y Jordan.'
+) => {
+  const url = URL_API_COHERE;
+  const token = API_KEY_COHERE_AI;
+
+  const data = {
+    message: userMessage,
+    model: 'command-r-plus',
+    preamble: context
+  };
+
+  try {
+    const response = await axios.post(url, data, {
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    return response.data.text;
+  } catch (error) {
+    console.error('Error al enviar mensaje a Cohere AI:', error);
+    if (error.response && error.response.status === 429) {
+      const response = 'Lo siento, hemos alcanzado nuestro límite de uso de la API. Por favor, intenta de nuevo más tarde.';
+      return response;
+    } else {
+      const response = 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo.';
+      return response;
+    }
+  }
+};

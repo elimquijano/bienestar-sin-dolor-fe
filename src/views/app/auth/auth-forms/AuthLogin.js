@@ -54,7 +54,7 @@ const FirebaseLogin = ({ ...others }) => {
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
+          email: Yup.string().email('Debe ser un correo electrónico válido.').max(255).required('Correo electrónico es requerido'),
           password: Yup.string().max(255).required('Contraseña es requerida')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
@@ -68,10 +68,7 @@ const FirebaseLogin = ({ ...others }) => {
 
             if (result.status === true) {
               createSession('SESSION_TOKEN', result.token);
-              createSession('USER_ID', result.admin_id);
-              createSession('USER_NAME', result.user_name);
-              createSession('USER_MAIL', result.user_email);
-              createSession('USER_AVATAR', result.avatar);
+              createSession('USER_SESSION', result.user_session);
               createSession('PRIVILEGIOS', JSON.stringify(result.privilegios));
               redirectToRelativePage('/#/');
             } else {
@@ -104,6 +101,7 @@ const FirebaseLogin = ({ ...others }) => {
                 onChange={handleChange}
                 label="Correo electrónico/nombre de usuario"
                 inputProps={{}}
+                size="small"
               />
               {touched.email && errors.email && (
                 <FormHelperText error id="standard-weight-helper-text-email-login">

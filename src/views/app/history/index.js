@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, Grid, Paper } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { TextField, Grid, Paper, Typography } from '@mui/material';
 import HistoryCard from 'ui-component/cards/HistoryCard';
 import { redirectToRelativePage } from 'common/common';
 
@@ -10,17 +9,10 @@ const buttons = [
     name: 'Dislocación de Primer Grado',
     percent: 60,
     onPress: () => redirectToRelativePage('/#/my-lesson/1')
-  },
-  {
-    id: 2,
-    name: 'Dislocación de la Pierna',
-    percent: 25,
-    onPress: () => redirectToRelativePage('/#/my-lesson/1')
   }
 ];
 
 const HistoryScreen = () => {
-  const theme = useTheme(); // Usar el tema definido
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredButtons, setFilteredButtons] = useState(buttons);
 
@@ -36,20 +28,28 @@ const HistoryScreen = () => {
   };
 
   return (
-    <div style={{ backgroundColor: theme.palette.grey[200], minHeight: '100vh', width: '100vw', padding: 12 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField label="Buscar..." variant="outlined" fullWidth onChange={handleSearchChange} value={searchQuery} />
-        </Grid>
-        {filteredButtons.map((b) => (
-          <Grid item xs={6} sm={6} md={4} key={b.id}>
-            <Paper elevation={3} style={{ padding: 16 }}>
-              <HistoryCard name={b.name} percent={b.percent} onPress={b.onPress} />
-            </Paper>
-          </Grid>
-        ))}
+    <Grid container style={{ display: 'flex', flexDirection: 'column' }}>
+      <Grid item xs={12}>
+        <TextField label="Buscar..." variant="outlined" fullWidth onChange={handleSearchChange} value={searchQuery} />
       </Grid>
-    </div>
+      <Grid item xs={12}>
+        {filteredButtons.length > 0 ? (
+          <Grid container sx={{ overflowY: 'auto', maxHeight: '72vh' }}>
+            {filteredButtons.map((b, index) => (
+              <Grid item xs={6} sm={6} md={4} key={index}>
+                <Paper elevation={3} style={{ padding: 8, margin: 8 }}>
+                  <HistoryCard name={b.name} percent={b.percent} onPress={b.onPress} />
+                </Paper>
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Typography align="center" style={{ padding: 12 }}>
+            No hay mensajes disponibles.
+          </Typography>
+        )}
+      </Grid>
+    </Grid>
   );
 };
 

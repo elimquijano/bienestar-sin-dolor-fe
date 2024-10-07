@@ -2,22 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
-import { useTheme } from '@mui/material/styles';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
 import Spectrogram from 'ui-component/Spectrogram';
-import { API_HOST, API_URL_CONVERSATION, API_URL_MENSAJE, getSession, notificationSwal, postData, ResponseAI, SpeakTextNative } from 'common/common';
-import { SpeechRecognition } from '@capacitor-community/speech-recognition';
-import { useParams } from 'react-router';
+import {
+  API_HOST,
+  API_URL_CONVERSATION,
+  API_URL_MENSAJE,
+  getSession,
+  notificationSwal,
+  postData,
+  ResponseAI,
+  SpeakTextWeb
+} from 'common/common';
+import { useTheme } from '@mui/material/styles';
 
-const VoiceChatScreen = () => {
+const VoiceChatWebScreen = () => {
   const { id } = useParams();
   const emisor = getSession('USER_SESSION');
   const [receptor, setReceptor] = useState({});
   const theme = useTheme();
   const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isGeneratedResponse, setIsGeneratedResponse] = useState(false);
-  const [transcript, setTranscript] = useState('');
+  const [recognition, setRecognition] = useState(null);
 
   useEffect(() => {
     fetch(API_URL_CONVERSATION + `/${id}`)
@@ -30,58 +38,50 @@ const VoiceChatScreen = () => {
   }, []);
 
   useEffect(() => {
-    checkPermission();
-    SpeakTextNative(`Hola ${emisor?.firstname}, soy tu asistente de rehabilitación. ¿En qué puedo ayudarte hoy?`, setIsSpeaking);
+    SpeakTextWeb(`Hola ${emisor?.firstname}, soy tu asistente de rehabilitación. ¿En qué puedo ayudarte hoy?`, setIsSpeaking);
+  }, []);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      notificationSwal('error', 'La API de reconocimiento de voz no es compatible con este navegador.');
+      return;
+    }
+
+    const recognitionInstance = new SpeechRecognition();
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
+
+    // Establecer el idioma a español
+    recognitionInstance.lang = 'es-ES'; // Cambia a 'es-MX' para español de México
+
+    recognitionInstance.onresult = (event) => {
+      const currentTranscript = Array.from(event.results)
+        .map((result) => result[0].transcript)
+        .join('');
+      setTranscript(currentTranscript);
+    };
+
+    recognitionInstance.onend = () => {
+      if (isListening) {
+        recognitionInstance.start();
+      }
+    };
+
+    setRecognition(recognitionInstance);
+
     return () => {
-      SpeechRecognition.removeAllListeners();
+      recognitionInstance.stop();
     };
   }, []);
 
-  const checkPermission = async () => {
-    try {
-      const { available } = await SpeechRecognition.available();
-      if (!available) {
-        notificationSwal('error', 'El reconocimiento de voz no está disponible en este dispositivo.');
-      }
-    } catch (error) {
-      console.error('Error al verificar disponibilidad:', error);
-      notificationSwal('error', `Error al verificar disponibilidad: ${error.message}`);
-    }
-  };
-
-  const startListening = async () => {
-    try {
-      await SpeechRecognition.start({
-        language: 'es-ES',
-        maxResults: 1,
-        prompt: 'Habla ahora',
-        partialResults: true,
-        popup: false
-      });
-
-      SpeechRecognition.addListener('partialResults', (result) => {
-        if (result.matches && result.matches.length > 0) {
-          setTranscript(result.matches[0]);
-        }
-      });
-
-      SpeechRecognition.addListener('listeningState', (data) => {
-        if (data.status == 'started') {
-          setIsListening(true);
-        } else if (data.status == 'stopped') {
-          setIsListening(false);
-          SpeakReponseAI();
-        }
-      });
-    } catch (error) {
-      console.error('Error al iniciar el reconocimiento de voz:', error);
-      notificationSwal('error', `Error al iniciar el reconocimiento de voz: ${error.message}`);
-    }
-  };
-
-  const SpeakReponseAI = async () => {
-    if (transcript.trim() !== '') {
-      try {
+  const handleListen = async () => {
+    setIsListening((prev) => !prev);
+    if (!isListening) {
+      recognition.start();
+    } else {
+      recognition.stop();
+      if (transcript.trim() !== '') {
         setIsGeneratedResponse(true);
         const newMessageUser = {
           conversation_id: id,
@@ -90,7 +90,7 @@ const VoiceChatScreen = () => {
         };
         const responseUser = await postData(API_URL_MENSAJE, newMessageUser);
         const response = await ResponseAI(responseUser.content);
-        
+
         const newMessageAssistant = {
           conversation_id: id,
           user_id: receptor.id,
@@ -98,16 +98,8 @@ const VoiceChatScreen = () => {
         };
         const responseAssistant = await postData(API_URL_MENSAJE, newMessageAssistant);
         setIsGeneratedResponse(false);
-        SpeakTextNative(responseAssistant.content, setIsSpeaking);
-      } catch (error) {
-        console.log('Error al obtener la respuesta de la IA', error);
+        SpeakTextWeb(responseAssistant.content, setIsSpeaking);
       }
-    }
-  };
-
-  const handleListen = async () => {
-    if (!isListening) {
-      await startListening();
     }
   };
 
@@ -120,6 +112,7 @@ const VoiceChatScreen = () => {
         flexDirection: 'column'
       }}
     >
+      {/* Header */}
       <AppContentHeader
         avatarImage={API_HOST + receptor?.image || ''}
         title={`${receptor?.firstname} ${receptor?.lastname}`}
@@ -146,8 +139,9 @@ const VoiceChatScreen = () => {
         </Typography>
       </Box>
 
+      {/* Recording button */}
       <Box sx={{ padding: 1, display: 'flex', justifyContent: 'center' }}>
-        <IconButton color="secondary" onClick={handleListen} sx={{ width: 60, height: 60 }} disabled={isSpeaking || isGeneratedResponse}>
+        <IconButton color="secondary" onClick={handleListen} sx={{ width: 60, height: 60 }} disabled={isSpeaking}>
           {isListening ? <StopIcon sx={{ fontSize: 40 }} /> : <MicIcon sx={{ fontSize: 40 }} />}
         </IconButton>
       </Box>
@@ -155,4 +149,4 @@ const VoiceChatScreen = () => {
   );
 };
 
-export default VoiceChatScreen;
+export default VoiceChatWebScreen;

@@ -16,6 +16,7 @@ import { SET_MENU } from 'store/actions';
 
 // assets
 import { IconChevronRight } from '@tabler/icons';
+import AppBarBottom from './BottomBar';
 
 // styles
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })(({ theme, open }) => ({
@@ -90,6 +91,7 @@ const MainLayout = () => {
         {/* breadcrumb */}
         <Breadcrumbs separator={IconChevronRight} navigation={navigation} icon title rightAlign />
         <Outlet />
+        <AppBarBottom/>
       </Main>
       <Customization />
     </Box>
