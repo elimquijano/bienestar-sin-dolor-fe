@@ -31,6 +31,7 @@ export const API_URL_ROL_PRIVILEGIO = API_URL + 'rolprivilegio';
 export const API_URL_PARTICIPANTE = API_URL + 'participante';
 export const API_URL_CONVERSATION = API_URL + 'conversation';
 export const API_URL_MENSAJE = API_URL + 'mensaje';
+export const API_URL_TRATAMIENTO = API_URL + 'tratamiento';
 
 export const API_URL_PRODUCTO = API_URL + 'producto';
 export const API_URL_CATEGORIA = API_URL + 'categoria';

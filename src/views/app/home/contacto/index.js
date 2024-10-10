@@ -1,55 +1,78 @@
-import React, { useState } from 'react';
-import { TextField, Grid, Paper } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { TextField, Grid, Paper, Button, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import HistoryCard from 'ui-component/cards/HistoryCard';
-import { redirectToRelativePage } from 'common/common';
-
-const buttons = [
-  {
-    id: 1,
-    name: 'Dislocación de Primer Grado',
-    percent: 60,
-    onPress: () => redirectToRelativePage('/#/my-lesson/1')
-  },
-  {
-    id: 2,
-    name: 'Dislocación de la Pierna',
-    percent: 25,
-    onPress: () => redirectToRelativePage('/#/my-lesson/1')
-  }
-];
+import { API_HOST, API_ROL_WITH_USER, redirectToRelativePage } from 'common/common';
+import UserInfoCard from 'ui-component/cards/UserInfoCard';
+import AppContentHeader from 'layout/MainLayout/HeaderContent';
+import { Capacitor } from '@capacitor/core';
 
 const EspecialistasListScreen = () => {
-  const theme = useTheme(); // Usar el tema definido
+  const idRol = 2;
+  const theme = useTheme();
+  const [especialistas, setEspecialistas] = useState([]);
+  const [filteredEspecialist, setFilteredEspecialist] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredButtons, setFilteredButtons] = useState(buttons);
+
+  useEffect(() => {
+    fetch(API_ROL_WITH_USER + `/${idRol}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setEspecialistas(data?.users);
+        setFilteredEspecialist(data?.users);
+      })
+      .catch((error) => console.log(error));
+  }, []);
 
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
-    const listaFiltrada = filtrarLista(buttons, query);
-    setFilteredButtons(listaFiltrada);
+    const listaFiltrada = filtrarLista(especialistas, query);
+    setFilteredEspecialist(listaFiltrada);
   };
 
   const filtrarLista = (lista, nombre) => {
-    return lista.filter((objeto) => objeto.name.toLowerCase().includes(nombre.toLowerCase()));
+    return lista.filter((objeto) => objeto.firstname.toLowerCase().includes(nombre.toLowerCase()));
   };
 
   return (
-    <div style={{ backgroundColor: theme.palette.grey[200], minHeight: '100vh', width: '100vw', padding: 12 }}>
-      <Grid container spacing={2}>
+    <Box style={{ backgroundColor: theme.palette.grey[200], height: '100vh' }}>
+      <AppContentHeader />
+      <Grid container spacing={2} sx={{ padding: 2 }}>
         <Grid item xs={12}>
-          <TextField label="Buscar..." variant="outlined" fullWidth onChange={handleSearchChange} value={searchQuery} />
+          <TextField label="Buscar especialistas..." variant="outlined" fullWidth onChange={handleSearchChange} value={searchQuery} />
         </Grid>
-        {filteredButtons.map((b) => (
-          <Grid item xs={6} sm={6} md={4} key={b.id}>
-            <Paper elevation={3} style={{ padding: 16 }}>
-              <HistoryCard name={b.name} percent={b.percent} onPress={b.onPress} />
+        {filteredEspecialist.map((esp, index) => (
+          <Grid item xs={12} key={index}>
+            <Paper elevation={3}>
+              <UserInfoCard
+                title={`${esp.firstname} ${esp.lastname}`}
+                subtitle={esp.address}
+                content={esp.email}
+                imagepath={API_HOST + esp.image}
+                buttons={
+                  <>
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
+                    >
+                      Ver en Mapa
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
+                    >
+                      Enviar Mensaje
+                    </Button>
+                  </>
+                }
+              />
             </Paper>
           </Grid>
         ))}
       </Grid>
-    </div>
+    </Box>
   );
 };
 

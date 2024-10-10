@@ -30,7 +30,7 @@ const AppContentRoutes = {
       element: <VoiceChatScreen />
     },
     {
-      path: '/chat-voz-web',
+      path: '/chat-voz-web/:id',
       element: <VoiceChatWebScreen />
     },
     {
