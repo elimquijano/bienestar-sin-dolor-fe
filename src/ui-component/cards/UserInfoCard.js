@@ -7,14 +7,15 @@ import CardMedia from '@mui/material/CardMedia';
 import Typography from '@mui/material/Typography';
 import { CardActions } from '@mui/material';
 
-export default function UserInfoCard({ title, subtitle, content, buttons, imagepath }) {
+const UserInfoCard = ({ title, subtitle, content, buttons, imagepath }) => {
   const theme = useTheme();
   return (
     <Card
       sx={{
-        backgroundColor: theme.palette.background.default,
-        borderRadius: 2
+        backgroundColor: theme.palette.primary,
+        cursor: 'pointer'
       }}
+      elevation={2}
     >
       <CardContent sx={{ display: 'flex', alignItems: 'center' }}>
         <CardMedia
@@ -23,8 +24,7 @@ export default function UserInfoCard({ title, subtitle, content, buttons, imagep
           image={imagepath || ''}
           sx={{
             width: 50,
-            height: 50,
-            borderRadius: 2
+            height: 50
           }}
         />
         <Box sx={{ marginLeft: 1 }}>
@@ -38,4 +38,6 @@ export default function UserInfoCard({ title, subtitle, content, buttons, imagep
       <CardActions>{buttons || null}</CardActions>
     </Card>
   );
-}
+};
+
+export default UserInfoCard;

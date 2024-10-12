@@ -26,7 +26,7 @@ import {
   Password as PasswordIcon
 } from '@mui/icons-material';
 
-import { API_HOST, API_URL_USER, createSession, getSession, notificationSwal, redirectToRelativePage } from 'common/common';
+import { API_HOST, API_URL_USER, getSession, notificationSwal, redirectToRelativePage } from 'common/common';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
 
 function AccountScreen() {
@@ -48,8 +48,9 @@ function AccountScreen() {
   const handleEditUserData = () => {
     // Abre el modal y carga los datos actuales en el estado de edición
     setEditData({
-      name: userData.name,
-      dni: userData.dni,
+      firstname: userData.firstname,
+      lastname: userData.lastname,
+      email: userData.email,
       phone: userData.phone,
       birthdate: userData.birthdate,
       gender: userData.gender
@@ -62,28 +63,26 @@ function AccountScreen() {
     const userId = userData.id;
     try {
       const formdata = new FormData();
-      formdata.append('name', editData.name);
-      formdata.append('ape_p', editData.ape_p);
-      formdata.append('ape_m', editData.ape_m);
-      formdata.append('dni', editData.dni);
+      formdata.append('firstname', editData.firstname);
+      formdata.append('lastname', editData.lastname);
+      formdata.append('email', editData.email);
       formdata.append('phone', editData.phone);
-      formdata.append('avatarFile', editData.avatarFile);
-      formdata.append('birthDate', editData.birthDate);
+      formdata.append('birthdate', editData.birthdate);
       formdata.append('gender', editData.gender);
-      formdata.append('userId', userId);
+      formdata.append('id', userId);
+      if (editData?.image) {
+        formdata.append('image', editData.image);
+      }
 
       const requestOptions = {
         method: 'POST',
         body: formdata
       };
 
-      const response = await fetch(API_URL_USER + 'Update/' + userId, requestOptions);
+      const response = await fetch(API_URL_USER + 'update/' + userId, requestOptions);
 
       const result = await response.json();
-      createSession('USER_AVATAR', result.data.avatar);
-
       notificationSwal('success', result.message);
-
       handleCloseModal1();
       redirectToRelativePage('/#/config');
     } catch (error) {
@@ -142,7 +141,7 @@ function AccountScreen() {
 
   const handleEditChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === 'avatarFile') {
+    if (name === 'image') {
       setEditData((prevEditedItem) => ({
         ...prevEditedItem,
         [name]: files[0]
@@ -272,27 +271,24 @@ function AccountScreen() {
           </Box>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
-              <TextField label="DNI" name="dni" value={editData.dni || ''} onChange={handleEditChange} fullWidth />
+              <TextField label="Nombres" name="firstname" value={editData.firstname || ''} onChange={handleEditChange} fullWidth />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField label="Nombre" name="name" value={editData.name || ''} onChange={handleEditChange} fullWidth />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Primer Apellido" name="ape_p" value={editData.ape_p || ''} onChange={handleEditChange} fullWidth />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField label="Segundo Apellido" name="ape_m" value={editData.ape_m || ''} onChange={handleEditChange} fullWidth />
+              <TextField label="Apellidos" name="lastname" value={editData.lastname || ''} onChange={handleEditChange} fullWidth />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Fecha de Nacimiento"
-                name="birthDate"
+                name="birthdate"
                 type="date"
                 InputLabelProps={{ shrink: true }}
-                value={editData.birthDate || ''}
+                value={editData.birthdate || ''}
                 onChange={handleEditChange}
                 fullWidth
               />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField label="Correo Electrónico" name="email" value={editData.email || ''} onChange={handleEditChange} fullWidth />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField label="Teléfono" name="phone" value={editData.phone || ''} onChange={handleEditChange} fullWidth />
@@ -310,7 +306,7 @@ function AccountScreen() {
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Perfil"
-                name="avatarFile"
+                name="image"
                 type="file"
                 InputLabelProps={{ shrink: true }}
                 inputProps={{ accept: 'image/*' }}

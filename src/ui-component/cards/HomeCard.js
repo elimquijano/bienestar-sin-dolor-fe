@@ -10,9 +10,10 @@ const HomeCard = ({ onPress, imageSource, name }) => {
       style={{
         backgroundColor: theme.palette.primary,
         cursor: 'pointer',
-        minHeight: 200
+        minHeight: 240
       }}
       onClick={onPress}
+      elevation={2}
     >
       <CardMedia
         component="img"
@@ -28,7 +29,7 @@ const HomeCard = ({ onPress, imageSource, name }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '8px 0'
+          padding: '4px'
         }}
       >
         <Typography

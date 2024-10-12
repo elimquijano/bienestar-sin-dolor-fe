@@ -121,9 +121,8 @@ const ChatScreen = () => {
                 padding: 2,
                 maxWidth: '70%',
                 backgroundColor: message.role === 'user' ? theme.palette.secondary.main : '#fff',
-                borderRadius: '20px',
-                borderTopLeftRadius: message.role === 'assistant' ? '0' : '20px',
-                borderTopRightRadius: message.role === 'user' ? '0' : '20px'
+                borderTopLeftRadius: message.role === 'assistant' ? '0' : 'auto',
+                borderTopRightRadius: message.role === 'user' ? '0' : 'auto'
               }}
             >
               <Typography style={{ color: message.role === 'user' ? '#fff' : '#000' }}>{message.content}</Typography>
@@ -132,7 +131,7 @@ const ChatScreen = () => {
         ))}
         {isWriting && (
           <ListItem sx={{ justifyContent: 'flex-start' }}>
-            <Paper elevation={1} sx={{ padding: 2, backgroundColor: '#f0f0f0', borderRadius: '20px' }}>
+            <Paper elevation={1} sx={{ padding: 2, backgroundColor: '#f0f0f0', borderRadius: 'auto' }}>
               <Typography>Escribiendo...</Typography>
             </Paper>
           </ListItem>

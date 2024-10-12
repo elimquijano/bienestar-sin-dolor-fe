@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TextField, Grid, Paper, Button, Box } from '@mui/material';
+import { TextField, Grid, Button, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { API_HOST, API_ROL_WITH_USER, redirectToRelativePage } from 'common/common';
 import UserInfoCard from 'ui-component/cards/UserInfoCard';
@@ -43,32 +43,30 @@ const EspecialistasListScreen = () => {
         </Grid>
         {filteredEspecialist.map((esp, index) => (
           <Grid item xs={12} key={index}>
-            <Paper elevation={3}>
-              <UserInfoCard
-                title={`${esp.firstname} ${esp.lastname}`}
-                subtitle={esp.address}
-                content={esp.email}
-                imagepath={API_HOST + esp.image}
-                buttons={
-                  <>
-                    <Button
-                      variant="outlined"
-                      color="secondary"
-                      onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
-                    >
-                      Ver en Mapa
-                    </Button>
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
-                    >
-                      Enviar Mensaje
-                    </Button>
-                  </>
-                }
-              />
-            </Paper>
+            <UserInfoCard
+              title={`${esp.firstname} ${esp.lastname}`}
+              subtitle={esp.address}
+              content={esp.email}
+              imagepath={API_HOST + esp.image}
+              buttons={
+                <>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
+                  >
+                    Ver en Mapa
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
+                  >
+                    Enviar Mensaje
+                  </Button>
+                </>
+              }
+            />
           </Grid>
         ))}
       </Grid>

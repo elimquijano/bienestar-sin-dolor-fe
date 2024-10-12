@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Paper } from '@mui/material';
+import { Grid } from '@mui/material';
 import IconConsulta from '../../../assets/images/icons/service.png';
 import IconDescarte from '../../../assets/images/icons/virus.png';
 import IconContact from '../../../assets/images/icons/nurse.png';
@@ -52,9 +52,7 @@ const HomeScreen = () => {
     <Grid container spacing={2} sx={{ paddingBottom: 6 }}>
       {buttons.map((button) => (
         <Grid item xs={6} md={4} lg={3} key={button.id}>
-          <Paper elevation={3} style={{ padding: 16, minHeight: 210 }}>
-            <HomeCard name={button.name} imageSource={button.imageSource} onPress={button.onPress} />
-          </Paper>
+          <HomeCard name={button.name} imageSource={button.imageSource} onPress={button.onPress} />
         </Grid>
       ))}
     </Grid>
