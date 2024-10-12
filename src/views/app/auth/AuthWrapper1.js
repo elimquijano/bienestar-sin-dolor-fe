@@ -3,9 +3,9 @@ import { styled } from '@mui/material/styles';
 
 // ==============================|| AUTHENTICATION 1 WRAPPER ||============================== //
 
-const AuthWrapper1 = styled('div')(({ theme }) => ({
-  backgroundColor: theme.palette.primary.light,
-  minHeight: '100vh'
+const AuthWrapper1 = styled('div')(() => ({
+  height: '100vh',
+  overflowY: 'auto'
 }));
 
 export default AuthWrapper1;
