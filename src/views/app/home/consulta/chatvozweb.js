@@ -15,6 +15,7 @@ import {
   SpeakTextWeb
 } from 'common/common';
 import { useTheme } from '@mui/material/styles';
+import { useParams } from 'react-router';
 
 const VoiceChatWebScreen = () => {
   const { id } = useParams();
@@ -76,11 +77,12 @@ const VoiceChatWebScreen = () => {
   }, []);
 
   const handleListen = async () => {
-    setIsListening((prev) => !prev);
     if (!isListening) {
       recognition.start();
+      setIsListening((prev) => !prev);
     } else {
       recognition.stop();
+      setIsListening((prev) => !prev);
       if (transcript.trim() !== '') {
         setIsGeneratedResponse(true);
         const newMessageUser = {
@@ -137,6 +139,7 @@ const VoiceChatWebScreen = () => {
             ? 'Hablando...'
             : 'Presiona el botón para hablar'}
         </Typography>
+        <Typography variant="" sx={{ mt: 2}}>{transcript}</Typography>
       </Box>
 
       {/* Recording button */}

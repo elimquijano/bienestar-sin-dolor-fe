@@ -144,6 +144,7 @@ const VoiceChatScreen = () => {
             ? 'Hablando...'
             : 'Presiona el botón para hablar'}
         </Typography>
+        <Typography variant="" sx={{ mt: 2}}>{transcript}</Typography>
       </Box>
 
       <Box sx={{ padding: 1, display: 'flex', justifyContent: 'center' }}>
