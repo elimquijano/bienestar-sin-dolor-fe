@@ -12,7 +12,7 @@ import IconCenter from '../../../../../assets/images/icons/hospital.png';
 import { useParams } from 'react-router';
 import { Geolocation } from '@capacitor/geolocation'; // Importa la API de Geolocalización de Capacitor
 
-const IconPosition = API_HOST + getSession('USER_SESSION').image;
+const IconPosition = getSession('USER_SESSION') ? API_HOST + getSession('USER_SESSION').image : '';
 
 const MarkerCustom = ({ item, permanent = false }) => {
   const theme = useTheme();
