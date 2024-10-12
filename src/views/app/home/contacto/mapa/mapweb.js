@@ -11,7 +11,7 @@ import { API_HOST, API_ROL_WITH_USER, getSession, notificationSwal } from 'commo
 import IconCenter from '../../../../../assets/images/icons/hospital.png';
 import { useParams } from 'react-router';
 
-const IconPosition = API_HOST + getSession('USER_SESSION')?.image;
+const IconPosition = API_HOST + getSession('USER_SESSION').image;
 
 const MarkerCustom = ({ item, permanent = false }) => {
   const theme = useTheme();
