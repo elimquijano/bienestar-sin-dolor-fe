@@ -3,15 +3,10 @@ import Swal from 'sweetalert2';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { OpenAI } from 'openai';
 
-//------------ CONEXIONES AL SERVER DE PRODCCION --------------------
-//export const URL = 'https://ibtel.tech/';
-//export const API_HOST ='https://api.ibtel.tech/';
 //------------ CONEXIONES AL SERVER DE PRUEBA --------------------
-// export const URL = 'https://pruebas.ibtel.tech/';
-//export const API_HOST = 'https://elimpruebasapi.nwperu.com/'; // REAL URL
+// export const URL = process.env.REACT_APP_URL;
+//export const API_HOST = process.env.REACT_APP_URL_API; // REAL URL
 //------------ CONEXIONES AL SERVER LOCAL --------------------
-
-//  export const URL = 'https://admin.nwperu.com/'; // REAL URL
 export const URL = 'http://localhost:3000/';
 export const API_HOST = 'http://localhost:8000/';
 
