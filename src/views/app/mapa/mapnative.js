@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer, Marker, Tooltip } from 'react-leaflet';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Button, InputAdornment, TextField, Box } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Button, InputAdornment, TextField, Grid } from '@mui/material';
 import { ExpandLess, ExpandMore, MyLocation, Search } from '@mui/icons-material';
-import AppContentHeader from 'layout/MainLayout/HeaderContent';
-import { API_HOST, API_ROL_WITH_USER, getSession, notificationSwal } from 'common/common';
-import IconCenter from '../../../../../assets/images/icons/hospital.png';
-import { useParams } from 'react-router';
+import { API_HOST, API_URL_ESPECIALISTAS, getSession, notificationSwal } from 'common/common';
+import IconCenter from '../../../assets/images/icons/hospital.png';
+import { Geolocation } from '@capacitor/geolocation'; // Importa la API de Geolocalización de Capacitor
 
 const IconPosition = getSession('USER_SESSION') ? API_HOST + getSession('USER_SESSION').image : '';
 
@@ -23,6 +22,7 @@ const MarkerCustom = ({ item, permanent = false }) => {
     iconAnchor: [17, 35],
     popupAnchor: [0, -35]
   });
+
   return (
     <Marker
       position={[location.latitude, location.longitude]}
@@ -73,10 +73,7 @@ const MarkerCustom = ({ item, permanent = false }) => {
   );
 };
 
-export default function MapWebScreen() {
-  const rolEspecialista = 2;
-  const { id } = useParams();
-  const theme = useTheme();
+export default function MapNativeScreen() {
   const [location, setLocation] = useState(null);
   const [centros, setCentros] = useState([]);
   const [filteredRows, setFilteredRows] = useState([]);
@@ -85,6 +82,7 @@ export default function MapWebScreen() {
   const [mapCenter, setMapCenter] = useState([-9.930648, -76.241496]);
   const [mapZoom, setMapZoom] = useState(7);
   const [mapKey, setMapKey] = useState(Date.now());
+  const [positionWatcher, setPositionWatcher] = useState(null);
 
   const iconPosition = new L.Icon({
     iconUrl: IconPosition,
@@ -115,49 +113,72 @@ export default function MapWebScreen() {
     return lista.filter((objeto) => objeto.name.toLowerCase().includes(nombre.toLowerCase()));
   };
 
-  const getLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setLocation({ latitude, longitude });
-          setMapCenter([latitude, longitude]);
-          setMapZoom(12);
-          setMapKey(Date.now());
-        },
-        (error) => {
-          notificationSwal('error', 'No se pudo obtener la ubicación: ' + error.message);
+  const startWatchingLocation = async () => {
+    try {
+      // Opciones para el seguimiento de la posición
+      const options = {
+        enableHighAccuracy: true, // Usar GPS para mayor precisión
+        timeout: 10000, // Tiempo máximo para obtener la posición (en milisegundos)
+        maximumAge: 0 // No usar una posición en caché
+      };
+
+      // Iniciar el seguimiento de la posición
+      const watcherId = await Geolocation.watchPosition(options, (position, err) => {
+        if (err) {
+          notificationSwal(
+            'error',
+            `No se pudo obtener la ubicación: ${err.message == 'location disabled' ? 'Activa tu GPS' : err.message}`
+          );
+          return;
         }
+
+        const { latitude, longitude } = position.coords;
+        setLocation({ latitude, longitude });
+      });
+
+      // Guardar el ID del watcher en el estado
+      setPositionWatcher(watcherId);
+    } catch (error) {
+      notificationSwal('error', `Error al iniciar el seguimiento de la ubicación: ${error.message}`);
+    }
+  };
+
+  const getLocation = async () => {
+    try {
+      const position = await Geolocation.getCurrentPosition(); // Usamos Geolocation de Capacitor
+      const { latitude, longitude } = position.coords;
+      setLocation({ latitude, longitude });
+      setMapCenter([latitude, longitude]);
+      setMapZoom(12);
+      setMapKey(Date.now());
+      startWatchingLocation();
+    } catch (error) {
+      notificationSwal(
+        'error',
+        `No se pudo obtener la ubicación: ${error.message == 'location disabled' ? 'Activa tu GPS' : error.message}`
       );
-    } else {
-      notificationSwal('error', 'La geolocalización no es compatible con este navegador.');
     }
   };
 
   useEffect(() => {
-    fetch(API_ROL_WITH_USER + `/${rolEspecialista}`)
+    fetch(API_URL_ESPECIALISTAS + 'all')
       .then((response) => response.json())
       .then((data) => {
-        setCentros(data?.users);
-        setFilteredRows(data?.users);
-        if (id != 0) {
-          mostrarEnMapa(data?.users.find((u) => u.id == id));
-        }
+        setCentros(data);
+        setFilteredRows(data);
       })
       .catch((error) => console.log('Error en obtener especialistas: ' + error));
+
+    return () => {
+      if (positionWatcher) {
+        Geolocation.clearWatch({ id: positionWatcher });
+      }
+    };
   }, []);
 
   return (
-    <Box
-      sx={{
-        backgroundColor: theme.palette.grey[200],
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      <AppContentHeader title={'Cercanos a tu ubicación'} isDark={false} />
-      <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+    <Grid container sx={{ height: '90%', width: '100%' }}>
+      <Paper sx={{ position: 'relative', height: '100%', width: '100%', padding: 1 }}>
         <Paper style={{ position: 'absolute', zIndex: 500 }} className="m-2">
           <div className="text-center">
             <Button fullWidth onClick={handleShowTable}>
@@ -239,7 +260,7 @@ export default function MapWebScreen() {
             </Marker>
           )}
         </MapContainer>
-      </div>
-    </Box>
+      </Paper>
+    </Grid>
   );
 }

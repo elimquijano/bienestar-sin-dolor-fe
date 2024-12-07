@@ -1,9 +1,10 @@
 import React from 'react';
-import { History, Home, Message } from '@mui/icons-material';
+import { History, Home, Map } from '@mui/icons-material';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
 import menuItems from 'menu-items';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
+import { Capacitor } from '@capacitor/core';
 
 const AppBarBottom = () => {
   const theme = useTheme();
@@ -15,6 +16,11 @@ const AppBarBottom = () => {
     setValue(newValue);
   };
 
+  const buttons = [
+    { label: 'Inicio', icon: <Home />, component: Link, to: '/', onClick: () => setValue(0) },
+    { label: 'Tratamientos', icon: <History />, component: Link, to: '/history', onClick: () => setValue(1) },
+    { label: 'Mapa', icon: <Map />, component: Link, to: `${Capacitor.isNativePlatform() ? 'map' : 'map-web'}`, onClick: () => setValue(2) }
+  ];
   return (
     <BottomNavigation
       value={value}
@@ -23,45 +29,24 @@ const AppBarBottom = () => {
       style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
       sx={{ display: { xs: 'flex', md: 'none' } }}
     >
-      <BottomNavigationAction
-        label="Inicio"
-        icon={<Home />}
-        component={Link}
-        to="/"
-        onClick={() => setValue(0)}
-        sx={{
-          color: value === 0 ? theme.palette.secondary.main : 'inherit',
-          '&.Mui-selected': {
-            color: theme.palette.secondary.main
-          }
-        }}
-      />
-      <BottomNavigationAction
-        label="Historial"
-        icon={<History />}
-        component={Link}
-        to="/history"
-        onClick={() => setValue(1)}
-        sx={{
-          color: value === 1 ? theme.palette.secondary.main : 'inherit',
-          '&.Mui-selected': {
-            color: theme.palette.secondary.main
-          }
-        }}
-      />
-      <BottomNavigationAction
-        label="Mensajes"
-        icon={<Message />}
-        component={Link}
-        to="/messages"
-        onClick={() => setValue(2)}
-        sx={{
-          color: value === 2 ? theme.palette.secondary.main : 'inherit',
-          '&.Mui-selected': {
-            color: theme.palette.secondary.main
-          }
-        }}
-      />
+      {buttons.map((b, index) => {
+        return (
+          <BottomNavigationAction
+            key={index}
+            label={b.label}
+            icon={b.icon}
+            component={b.component}
+            to={b.to}
+            onClick={b.onClick}
+            sx={{
+              color: value === index ? theme.palette.secondary.main : 'inherit',
+              '&.Mui-selected': {
+                color: theme.palette.secondary.main
+              }
+            }}
+          />
+        );
+      })}
     </BottomNavigation>
   );
 };

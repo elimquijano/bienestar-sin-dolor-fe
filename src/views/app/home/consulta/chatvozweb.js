@@ -4,39 +4,20 @@ import MicIcon from '@mui/icons-material/Mic';
 import StopIcon from '@mui/icons-material/Stop';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
 import Spectrogram from 'ui-component/Spectrogram';
-import {
-  API_HOST,
-  API_URL_CONVERSATION,
-  API_URL_MENSAJE,
-  getSession,
-  notificationSwal,
-  postData,
-  ResponseAI,
-  SpeakTextWeb
-} from 'common/common';
+import { API_URL_INTERACCION, getSession, notificationSwal, postData, ResponseAI, SpeakTextWeb } from 'common/common';
 import { useTheme } from '@mui/material/styles';
 import { useParams } from 'react-router';
+import Icon from '../../../../assets/images/Logo.png';
 
 const VoiceChatWebScreen = () => {
   const { id } = useParams();
   const emisor = getSession('USER_SESSION');
-  const [receptor, setReceptor] = useState({});
   const theme = useTheme();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isGeneratedResponse, setIsGeneratedResponse] = useState(false);
   const [recognition, setRecognition] = useState(null);
-
-  useEffect(() => {
-    fetch(API_URL_CONVERSATION + `/${id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const participante = data?.participantes.find((p) => p.id !== emisor?.id);
-        setReceptor(participante);
-      })
-      .catch((error) => console.log(error));
-  }, []);
 
   useEffect(() => {
     SpeakTextWeb(`Hola ${emisor?.firstname}, soy tu asistente de rehabilitación. ¿En qué puedo ayudarte hoy?`, setIsSpeaking);
@@ -85,22 +66,18 @@ const VoiceChatWebScreen = () => {
       setIsListening((prev) => !prev);
       if (transcript.trim() !== '') {
         setIsGeneratedResponse(true);
-        const newMessageUser = {
+        const response = await ResponseAI(transcript);
+        setIsGeneratedResponse(false);
+        SpeakTextWeb(response, setIsSpeaking);
+        const newInteraction = {
           conversation_id: id,
           user_id: emisor.id,
-          content: transcript
+          pregunta: transcript,
+          respuesta: response
         };
-        const responseUser = await postData(API_URL_MENSAJE, newMessageUser);
-        const response = await ResponseAI(responseUser.content);
 
-        const newMessageAssistant = {
-          conversation_id: id,
-          user_id: receptor.id,
-          content: response
-        };
-        const responseAssistant = await postData(API_URL_MENSAJE, newMessageAssistant);
-        setIsGeneratedResponse(false);
-        SpeakTextWeb(responseAssistant.content, setIsSpeaking);
+        // guardar en la base de datos
+        await postData(API_URL_INTERACCION, newInteraction);
       }
     }
   };
@@ -115,11 +92,7 @@ const VoiceChatWebScreen = () => {
       }}
     >
       {/* Header */}
-      <AppContentHeader
-        avatarImage={API_HOST + receptor?.image || ''}
-        title={`${receptor?.firstname} ${receptor?.lastname}`}
-        isDark={false}
-      />
+      <AppContentHeader avatarImage={Icon} title={`Chat AI`} isDark={false} />
       <Box
         sx={{
           flexGrow: 1,
@@ -139,7 +112,9 @@ const VoiceChatWebScreen = () => {
             ? 'Hablando...'
             : 'Presiona el botón para hablar'}
         </Typography>
-        <Typography variant="" sx={{ mt: 2}}>{transcript}</Typography>
+        <Typography variant="" sx={{ mt: 2 }}>
+          {transcript}
+        </Typography>
       </Box>
 
       {/* Recording button */}

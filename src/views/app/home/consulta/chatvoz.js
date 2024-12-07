@@ -5,29 +5,25 @@ import StopIcon from '@mui/icons-material/Stop';
 import { useTheme } from '@mui/material/styles';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
 import Spectrogram from 'ui-component/Spectrogram';
-import { API_HOST, API_URL_CONVERSATION, API_URL_MENSAJE, getSession, notificationSwal, postData, ResponseAI, SpeakTextNative } from 'common/common';
+import { API_URL_INTERACCION, getSession, notificationSwal, postData, ResponseAI, SpeakTextNative } from 'common/common';
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { useParams } from 'react-router';
+import { useRef } from 'react';
+import Icon from '../../../../assets/images/Logo.png';
 
 const VoiceChatScreen = () => {
   const { id } = useParams();
   const emisor = getSession('USER_SESSION');
-  const [receptor, setReceptor] = useState({});
   const theme = useTheme();
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isGeneratedResponse, setIsGeneratedResponse] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const transcriptRef = useRef(transcript);
 
   useEffect(() => {
-    fetch(API_URL_CONVERSATION + `/${id}`)
-      .then((response) => response.json())
-      .then((data) => {
-        const participante = data?.participantes.find((p) => p.id !== emisor?.id);
-        setReceptor(participante);
-      })
-      .catch((error) => console.log(error));
-  }, []);
+    transcriptRef.current = transcript;
+  }, [transcript]);
 
   useEffect(() => {
     checkPermission();
@@ -42,6 +38,11 @@ const VoiceChatScreen = () => {
       const { available } = await SpeechRecognition.available();
       if (!available) {
         notificationSwal('error', 'El reconocimiento de voz no está disponible en este dispositivo.');
+        return;
+      }
+      const permission = await SpeechRecognition.requestPermissions();
+      if (permission.speechRecognition !== 'granted') {
+        notificationSwal('error', 'Permiso de micrófono denegado. Por favor, habilítalo en la configuración de la aplicación.');
       }
     } catch (error) {
       console.error('Error al verificar disponibilidad:', error);
@@ -68,7 +69,7 @@ const VoiceChatScreen = () => {
       SpeechRecognition.addListener('listeningState', (data) => {
         if (data.status == 'started') {
           setIsListening(true);
-        } else if (data.status == 'stopped') {
+        } else {
           setIsListening(false);
           SpeakReponseAI();
         }
@@ -80,27 +81,27 @@ const VoiceChatScreen = () => {
   };
 
   const SpeakReponseAI = async () => {
-    if (transcript.trim() !== '') {
+    const currentTranscript = transcriptRef.current;
+    if (currentTranscript.trim() !== '') {
       try {
         setIsGeneratedResponse(true);
-        const newMessageUser = {
+        const response = await ResponseAI(currentTranscript);
+        setIsGeneratedResponse(false);
+        SpeakTextNative(response, setIsSpeaking);
+        const newInteraction = {
           conversation_id: id,
           user_id: emisor.id,
-          content: transcript
+          pregunta: currentTranscript,
+          respuesta: response
         };
-        const responseUser = await postData(API_URL_MENSAJE, newMessageUser);
-        const response = await ResponseAI(responseUser.content);
-        
-        const newMessageAssistant = {
-          conversation_id: id,
-          user_id: receptor.id,
-          content: response
-        };
-        const responseAssistant = await postData(API_URL_MENSAJE, newMessageAssistant);
-        setIsGeneratedResponse(false);
-        SpeakTextNative(responseAssistant.content, setIsSpeaking);
+
+        // guardar en la base de datos
+        await postData(API_URL_INTERACCION, newInteraction);
       } catch (error) {
-        console.log('Error al obtener la respuesta de la IA', error);
+        notificationSwal('error', 'Error al obtener la respuesta de la IA' + error);
+      } finally {
+        setTranscript('');
+        setIsGeneratedResponse(false);
       }
     }
   };
@@ -120,11 +121,7 @@ const VoiceChatScreen = () => {
         flexDirection: 'column'
       }}
     >
-      <AppContentHeader
-        avatarImage={API_HOST + receptor?.image || ''}
-        title={`${receptor?.firstname} ${receptor?.lastname}`}
-        isDark={false}
-      />
+      <AppContentHeader avatarImage={Icon} title={`Chat AI`} isDark={false} />
       <Box
         sx={{
           flexGrow: 1,
@@ -144,7 +141,9 @@ const VoiceChatScreen = () => {
             ? 'Hablando...'
             : 'Presiona el botón para hablar'}
         </Typography>
-        <Typography variant="" sx={{ mt: 2}}>{transcript}</Typography>
+        <Typography variant="" sx={{ mt: 2 }}>
+          {transcript}
+        </Typography>
       </Box>
 
       <Box sx={{ padding: 1, display: 'flex', justifyContent: 'center' }}>

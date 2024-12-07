@@ -1,10 +1,7 @@
 import seguridad from './seguridad';
-import cuenta from './cuenta';
 import retransmission from './retransmission';
 import { getSession } from 'common/common';
 import traccar from './traccar';
-// import reportes from './reportes';
-import plan from './plan';
 import vehiculos from './vehiculos';
 import appuser from './appuser';
 
@@ -28,18 +25,12 @@ if (privilegios) {
   if (tieneRetransmision) {
     menuItems.items.push(retransmission);
   }
-  // if (tieneInventario) {
-  //   menuItems.items.push(inventario);
-  // }
   if (tieneTraccar) {
     menuItems.items.push(traccar);
   }
   if (tieneSeguridad) {
     menuItems.items.push(seguridad);
   }
-  // menuItems.items.push(reportes);
-  menuItems.items.push(plan);
-  menuItems.items.push(cuenta);
 }
 
 export default menuItems;

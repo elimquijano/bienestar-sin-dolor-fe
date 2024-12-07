@@ -1,13 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { TextField, Grid, Button, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { API_HOST, API_ROL_WITH_USER, redirectToRelativePage } from 'common/common';
+import {
+  API_HOST,
+  API_ROL_WITH_USER,
+  API_URL_CONVERSATION,
+  fetchAPIAsync,
+  getSession,
+  postData,
+  redirectToRelativePage
+} from 'common/common';
 import UserInfoCard from 'ui-component/cards/UserInfoCard';
-import AppContentHeader from 'layout/MainLayout/HeaderContent';
 import { Capacitor } from '@capacitor/core';
 
 const EspecialistasListScreen = () => {
   const idRol = 2;
+  const tipoConversation = 2; // USER-ESPECIALISTA
   const theme = useTheme();
   const [especialistas, setEspecialistas] = useState([]);
   const [filteredEspecialist, setFilteredEspecialist] = useState([]);
@@ -34,10 +42,32 @@ const EspecialistasListScreen = () => {
     return lista.filter((objeto) => objeto.firstname.toLowerCase().includes(nombre.toLowerCase()));
   };
 
+  const sendMessage = async (receptor_id) => {
+    try {
+      const data = { emisor_id: getSession('USER_SESSION')?.id, receptor_id: receptor_id };
+      const result = await fetchAPIAsync(API_URL_CONVERSATION + 'exist', data, 'GET');
+      if (result?.id) {
+        redirectToRelativePage(`/#/chat-user/${result?.id}`);
+      } else {
+        const newConversation = {
+          tipo_id: tipoConversation,
+          emisor_id: data.emisor_id,
+          receptor_id: data.receptor_id
+        };
+
+        const response = await postData(API_URL_CONVERSATION + 'bloque', newConversation);
+        if (response?.id) {
+          redirectToRelativePage(`/#/chat-user/${response?.id}`);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <Box style={{ backgroundColor: theme.palette.grey[200], height: '100vh' }}>
-      <AppContentHeader />
-      <Grid container spacing={2} sx={{ padding: 2 }}>
+      <Grid container spacing={2}>
         <Grid item xs={12}>
           <TextField label="Buscar especialistas..." variant="outlined" fullWidth onChange={handleSearchChange} value={searchQuery} />
         </Grid>
@@ -57,11 +87,7 @@ const EspecialistasListScreen = () => {
                   >
                     Ver en Mapa
                   </Button>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => redirectToRelativePage(`/#/${Capacitor.isNativePlatform() ? 'map/' : 'map-web/'}${esp.id}`)}
-                  >
+                  <Button variant="contained" color="secondary" onClick={() => sendMessage(esp.id)}>
                     Enviar Mensaje
                   </Button>
                 </>

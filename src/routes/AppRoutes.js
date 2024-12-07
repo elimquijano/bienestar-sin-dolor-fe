@@ -1,15 +1,14 @@
-//import { lazy } from 'react';
-
-import MainLayout from 'layout/MainLayout';
-import HistoryScreen from 'views/app/history';
-import HomeScreen from 'views/app/home';
-import MessageScreen from 'views/app/messages';
+import { lazy } from 'react';
 
 // project imports
-//import Loadable from 'ui-component/Loadable';
+import MainLayout from 'layout/MainLayout';
+import Loadable from 'ui-component/Loadable';
 
 // login option 3 routing
-//const HomeScreen = Loadable(lazy(() => import('views/app/home')));
+const HomeScreen = Loadable(lazy(() => import('views/app/home')));
+const MapNativeScreen = Loadable(lazy(() => import('views/app/mapa/mapnative')));
+const MapWebScreen = Loadable(lazy(() => import('views/app/mapa/mapweb')));
+const HistoryScreen = Loadable(lazy(() => import('views/app/history')));
 
 const AppRoutes = {
   path: '/',
@@ -20,12 +19,16 @@ const AppRoutes = {
       element: <HomeScreen />
     },
     {
-      path: '/history',
-      element: <HistoryScreen />
+      path: '/map',
+      element: <MapNativeScreen />
     },
     {
-      path: '/messages',
-      element: <MessageScreen />
+      path: '/map-web',
+      element: <MapWebScreen />
+    },
+    {
+      path: '/history',
+      element: <HistoryScreen />
     }
   ]
 };

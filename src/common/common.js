@@ -1,37 +1,42 @@
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
+import { OpenAI } from 'openai';
 
 //------------ CONEXIONES AL SERVER DE PRODCCION --------------------
 //export const URL = 'https://ibtel.tech/';
 //export const API_HOST ='https://api.ibtel.tech/';
 //------------ CONEXIONES AL SERVER DE PRUEBA --------------------
 // export const URL = 'https://pruebas.ibtel.tech/';
-export const API_HOST = 'https://elimpruebasapi.nwperu.com/'; // REAL URL
+//export const API_HOST = 'https://elimpruebasapi.nwperu.com/'; // REAL URL
 //------------ CONEXIONES AL SERVER LOCAL --------------------
 
 //  export const URL = 'https://admin.nwperu.com/'; // REAL URL
 export const URL = 'http://localhost:3000/';
-//export const API_HOST = 'http://localhost:8000/';
+export const API_HOST = 'http://localhost:8000/';
 
 //export const URL = process.env.REACT_APP_URL;
 //export const API_HOST = process.env.REACT_APP_URL_API;
-export const URL_API_COHERE = 'https://api.cohere.com/v1/chat';
-export const API_KEY_COHERE_AI = 'WrsU1lPWyADMsyRUibCTQCtiEZmD9z22ebHvpWQj';
+export const URL_API_COHERE = process.env.REACT_APP_API_COHERE_URL;
+export const API_KEY_COHERE_AI = process.env.REACT_APP_COHERE_TOKEN;
+
+export const URL_API_HF = process.env.REACT_APP_API_HF_URL;
+export const API_KEY_HF = process.env.REACT_APP_HF_TOKEN;
+
+export const URL_API_CLASSIFIER = 'http://127.0.0.1:5000/predict';
 
 export const API_URL = API_HOST + 'api/';
 export const API_URL_LOGIN = API_URL + 'login';
 export const API_URL_USER = API_URL + 'user';
 export const API_URL_ROL = API_URL + 'rol';
 export const API_URL_USER_ROL = API_URL + 'roluser';
-export const API_ROL_WITH_USER = API_URL + 'rolwithusers';
 export const API_URL_MODULO = API_URL + 'modulo';
 export const API_URL_PRIVILEGIO = API_URL + 'privilegio';
 export const API_URL_ROL_PRIVILEGIO = API_URL + 'rolprivilegio';
-export const API_URL_PARTICIPANTE = API_URL + 'participante';
 export const API_URL_CONVERSATION = API_URL + 'conversation';
-export const API_URL_MENSAJE = API_URL + 'mensaje';
-export const API_URL_TRATAMIENTO = API_URL + 'tratamiento';
+export const API_URL_INTERACCION = API_URL + 'interaccion';
+export const API_URL_ESPECIALISTAS = API_URL + 'especialista';
+export const API_URL_ENFERMEDAD = API_URL + 'enfermedad';
 
 export const API_URL_PRODUCTO = API_URL + 'producto';
 export const API_URL_CATEGORIA = API_URL + 'categoria';
@@ -369,6 +374,40 @@ export function navigateTo(url) {
   window.location.href = URL + '#/admin/' + url;
 }
 
+// Función para formatear la fecha
+export function formatearFecha(fechaISO) {
+  // Convertir la cadena a un objeto Date
+  const fecha = new Date(fechaISO);
+
+  // Restar 5 horas (5 * 60 * 60 * 1000 milisegundos)
+  fecha.setHours(fecha.getHours() - 5);
+
+  // Obtener la fecha actual sin la hora
+  const fechaActual = new Date();
+  const anioActual = fechaActual.getFullYear();
+  const mesActual = String(fechaActual.getMonth() + 1).padStart(2, '0'); // Los meses son 0-indexados
+  const diaActual = String(fechaActual.getDate()).padStart(2, '0');
+  const fechaHoy = `${anioActual}-${mesActual}-${diaActual}`;
+
+  // Formatear la fecha en el formato deseado para mensajes
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  const horas = String(fecha.getHours()).padStart(2, '0');
+  const minutos = String(fecha.getMinutes()).padStart(2, '0');
+
+  // Crear la cadena en el formato deseado
+  const fechaComparar = `${anio}-${mes}-${dia}`;
+
+  // Retornar solo la hora si la fecha es igual a la fecha actual
+  if (fechaComparar === fechaHoy) {
+    return `${horas}:${minutos}`;
+  } else {
+    return fechaComparar;
+  }
+}
+
+// para android
 export const SpeakTextNative = async (text, setIsSpeaking, language = 'es-ES') => {
   if (text) {
     try {
@@ -389,6 +428,7 @@ export const SpeakTextNative = async (text, setIsSpeaking, language = 'es-ES') =
   }
 };
 
+// para la web
 export const SpeakTextWeb = (text, setIsSpeaking, language = 'es-ES') => {
   if (text) {
     const utterance = new SpeechSynthesisUtterance(text);
@@ -402,6 +442,43 @@ export const SpeakTextWeb = (text, setIsSpeaking, language = 'es-ES') => {
 };
 
 export const ResponseAI = async (
+  userMessage,
+  context = 'Eres un asistente de fisioterapia y médico experto. Tu tarea es evaluar las dolencias descritas por el usuario y responde de manera breve y concisa. Haz preguntas detalladas para obtener la mayor cantidad de información posible sobre el malestar del usuario. No darás recomendaciones específicas hasta haber recopilado suficiente información. Solo responderás preguntas relacionadas con dolencias de la pierna o la parte inferior del cuerpo. Una vez que el usuario haya proporcionado suficiente información, realiza un pre-descarte de lesiones simples, desgarros o fracturas, basándote en los síntomas descritos. Si los síntomas coinciden con alguna de las siguientes condiciones, indica al usuario que busque el nombre del diagnóstico en la ventana principal de la aplicación:Desgarro muscular del vasto lateral del cuadríceps: Punción y dolor en forma de quemazón al moverse, hinchazón, coloración morado-rosácea, y dolor al pisar.Gonartrosis: Crujido en la rodilla, debilitamiento al caminar, inflamación en las zonas laterales de la rodilla.Contractura muscular en la pantorrilla: Calambres, dureza muscular anormal, y dolor tras actividad física prolongada.Punto Gatillo Profundo o Superficial: Dolor momentáneo en pantorrilla o cuadríceps.Si identificas síntomas que coinciden, sugiere al usuario buscar tratamiento en la aplicación usando el botón "¿ya tienes tu descarte?". Si no se identifican síntomas claros, recomienda ver a un especialista.Además, reconoce insultos o malas palabras y no responderás a preguntas que no estén relacionadas con dolencias de la pierna o la parte inferior del cuerpo.'
+) => {
+  const client = new OpenAI({
+    baseURL: URL_API_HF,
+    apiKey: API_KEY_HF,
+    dangerouslyAllowBrowser: true
+  });
+
+  let out = '';
+
+  const stream = await client.chat.completions.create({
+    model: '01-ai/Yi-1.5-34B-Chat',
+    messages: [
+      {
+        role: 'system',
+        content: context
+      },
+      { role: 'user', content: userMessage }
+    ],
+    temperature: 0.5,
+    max_tokens: 2048,
+    top_p: 0.7,
+    stream: true
+  });
+
+  for await (const chunk of stream) {
+    if (chunk.choices && chunk.choices.length > 0) {
+      const newContent = chunk.choices[0].delta.content;
+      out += newContent;
+    }
+  }
+
+  return out;
+};
+
+export const ResponseAIAux = async (
   userMessage,
   context = 'Eres un fisioterapeuta y médico experto. Tu tarea es evaluar las dolencias descritas por el usuario y proporcionar orientación inicial. Debes hacer preguntas detalladas para obtener la mayor cantidad de información posible sobre el malestar del usuario. No debes dar recomendaciones específicas hasta haber recopilado suficiente información. No debes realizar más de una pregunta en una sola respuesta, sino una sola pregunta. Pregunta al usuario sobre su malestar: "¿Dónde sientes dolor y cuándo comenzó?" Indaga sobre la naturaleza de la lesión: "¿Cómo ocurrió la lesión? ¿Fue un movimiento brusco, una caída, o algo más?" Pregunta sobre síntomas adicionales: "¿Has notado hinchazón, moretones o limitación en el movimiento?" Indaga sobre tratamientos previos: "¿Has recibido algún tratamiento para este malestar? ¿Qué has probado hasta ahora?" Pregunta sobre actividades: "¿Hay alguna actividad que empeore o mejore el dolor?" Una vez que el usuario haya proporcionado suficiente información, realiza un pre-descarte de lesiones simples, desgarros o fracturas, basándote en los síntomas descritos. Ofrece consejos de rehabilitación básicos y sugiere cuándo es necesario buscar atención médica profesional solo cuando ya no haya más respuestas a sus preguntas del usuario. Si el usuario pregunta por tu creador, solo si pregunta, sino no, responde que fuiste creado por los estudiantes de ingeniería de sistemas de la UNHEVAL: Elim, Johan y Jordan.'
 ) => {

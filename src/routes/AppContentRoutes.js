@@ -1,21 +1,19 @@
-//import { lazy } from 'react';
-
-import MinimalLayout from 'layout/MinimalLayout';
-import AccountScreen from 'views/app/account';
-import LessonScreen from 'views/app/history/lessons';
-import ChatScreen from 'views/app/home/consulta/chat';
-import VoiceChatScreen from 'views/app/home/consulta/chatvoz';
-import VoiceChatWebScreen from 'views/app/home/consulta/chatvozweb';
-import EspecialistasListScreen from 'views/app/home/contacto';
-import MapNativeScreen from 'views/app/home/contacto/mapa/mapnative';
-import MapWebScreen from 'views/app/home/contacto/mapa/mapweb';
-import TratamientoScreen from 'views/app/home/descarte';
+import { lazy } from 'react';
 
 // project imports
-//import Loadable from 'ui-component/Loadable';
+import MinimalLayout from 'layout/MinimalLayout';
+import Loadable from 'ui-component/Loadable';
+import WebcamCapture from 'ui-component/camera';
 
-// login option 3 routing
-//const HomeScreen = Loadable(lazy(() => import('views/app/home')));
+const AccountScreen = Loadable(lazy(() => import('views/app/account')));
+const LessonScreen = Loadable(lazy(() => import('views/app/history/lessons')));
+const ChatScreen = Loadable(lazy(() => import('views/app/home/consulta/chat')));
+const VoiceChatScreen = Loadable(lazy(() => import('views/app/home/consulta/chatvoz')));
+const VoiceChatWebScreen = Loadable(lazy(() => import('views/app/home/consulta/chatvozweb')));
+const TratamientoScreen = Loadable(lazy(() => import('views/app/home/descarte')));
+const Model = Loadable(lazy(() => import('ui-component/animation')));
+const ImageClassifierPage = Loadable(lazy(() => import('views/app/home/radiografia')));
+const PoseDetectionPage = Loadable(lazy(() => import('views/app/history/poseDetection')));
 
 const AppContentRoutes = {
   path: '/',
@@ -38,20 +36,24 @@ const AppContentRoutes = {
       element: <AccountScreen />
     },
     {
-      path: '/especialistas',
-      element: <EspecialistasListScreen />
-    },
-    {
-      path: '/map/:id',
-      element: <MapNativeScreen />
-    },
-    {
-      path: '/map-web/:id',
-      element: <MapWebScreen />
-    },
-    {
       path: '/tratamientos',
       element: <TratamientoScreen />
+    },
+    {
+      path: '/camera',
+      element: <WebcamCapture />
+    },
+    {
+      path: '/animate',
+      element: <Model />
+    },
+    {
+      path: '/radiografia',
+      element: <ImageClassifierPage />
+    },
+    {
+      path: '/pose-detection',
+      element: <PoseDetectionPage />
     },
     {
       path: '/my-lesson/:id',

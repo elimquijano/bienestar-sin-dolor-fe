@@ -1,48 +1,20 @@
 import React from 'react';
-import { Card, CardMedia, CardContent, Typography } from '@mui/material';
+import { Card, CardMedia, CardContent, Typography, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 const HomeCard = ({ onPress, imageSource, name }) => {
   const theme = useTheme();
 
   return (
-    <Card
-      style={{
-        backgroundColor: theme.palette.primary,
-        cursor: 'pointer',
-        minHeight: 240
-      }}
-      onClick={onPress}
-      elevation={2}
-    >
-      <CardMedia
-        component="img"
-        image={imageSource}
-        alt={name}
-        style={{
-          backgroundColor: theme.palette.primary,
-          objectFit: 'cover'
-        }}
-      />
-      <CardContent
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '4px'
-        }}
-      >
-        <Typography
-          variant="body2"
-          style={{
-            fontWeight: 700,
-            textAlign: 'center',
-            color: theme.palette.text.secondary
-          }}
-        >
-          {name}
-        </Typography>
-      </CardContent>
+    <Card sx={{ display: 'flex', bgcolor: theme.palette.secondary.main }} onClick={onPress}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
+        <CardContent sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 0 auto' }}>
+          <Typography component="div" variant="h5" color={'white'} textAlign="center">
+            {name}
+          </Typography>
+        </CardContent>
+      </Box>
+      <CardMedia component="img" sx={{ width: 151 }} image={imageSource} alt={name} />
     </Card>
   );
 };

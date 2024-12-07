@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import { Box, TextField, IconButton, Typography, List, ListItem, Paper, InputAdornment } from '@mui/material';
 import { Mic, Send as SendIcon } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import { API_HOST, API_URL_CONVERSATION, API_URL_MENSAJE, getSession, postData, redirectToRelativePage, ResponseAI } from 'common/common';
+import { API_URL_INTERACCION, getSession, postData, redirectToRelativePage, ResponseAI } from 'common/common';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
 import { useEffect } from 'react';
 import { useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { useParams } from 'react-router';
+import Icon from '../../../../assets/images/Logo.png';
 
 const ChatScreen = () => {
   const { id } = useParams();
   const emisor = getSession('USER_SESSION');
-  const [receptor, setReceptor] = useState({});
   const theme = useTheme();
   const containerRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -29,26 +29,22 @@ const ChatScreen = () => {
     if (newMessage.trim() !== '') {
       setIsLoading(true);
       try {
-        const newMessageUser = {
-          conversation_id: id,
-          user_id: emisor.id,
-          content: newMessage
-        };
-        const responseUser = await postData(API_URL_MENSAJE, newMessageUser);
-        const userMessage = { role: 'user', content: responseUser.content };
+        const userMessage = { role: 'user', content: newMessage };
         setMessages((prevMessages) => [...prevMessages, userMessage]);
         setNewMessage('');
-
         setIsWriting(true);
         const responseAI = await ResponseAI(newMessage);
-        const newMessageAssistant = {
-          conversation_id: id,
-          user_id: receptor.id,
-          content: responseAI
-        };
-        const responseAssistant = await postData(API_URL_MENSAJE, newMessageAssistant);
-        const aiMessage = { role: 'assistant', content: responseAssistant.content };
+        const aiMessage = { role: 'assistant', content: responseAI };
         setMessages((prevMessages) => [...prevMessages, aiMessage]);
+        const newInteraction = {
+          conversation_id: id,
+          user_id: emisor.id,
+          pregunta: newMessage,
+          respuesta: responseAI
+        };
+
+        // guardar en la base de datos
+        await postData(API_URL_INTERACCION, newInteraction);
       } catch (error) {
         console.log(error);
       } finally {
@@ -65,22 +61,33 @@ const ChatScreen = () => {
     }
   };
 
-  const formatearManyMessage = (arrayMessage) => {
-    const messagesFormated = arrayMessage.map((m) => {
-      const role = m.user_id == emisor.id ? 'user' : 'assistant';
-      return { role: role, content: m.content };
+  const formatearManyMessage = (arrayMessage = []) => {
+    const messagesFormated = [];
+
+    arrayMessage?.forEach((m) => {
+      // Formatear la pregunta
+      const pregunta = {
+        role: 'user',
+        content: m.pregunta
+      };
+      messagesFormated.push(pregunta);
+
+      // Formatear la respuesta
+      const respuesta = {
+        role: 'assistant',
+        content: m.respuesta
+      };
+      messagesFormated.push(respuesta);
     });
 
     return messagesFormated;
   };
 
   useEffect(() => {
-    fetch(API_URL_CONVERSATION + `/${id}`)
+    fetch(API_URL_INTERACCION + `?conversation_id=${id}`)
       .then((response) => response.json())
       .then((data) => {
-        const participante = data?.participantes.find((p) => p.id !== emisor?.id);
-        setReceptor(participante);
-        setMessages([...formatearManyMessage(data?.mensajes), messageDefault]);
+        setMessages([...formatearManyMessage(data?.data), messageDefault]);
       })
       .catch((error) => console.log(error));
   }, []);
@@ -100,11 +107,7 @@ const ChatScreen = () => {
         flexDirection: 'column'
       }}
     >
-      <AppContentHeader
-        avatarImage={API_HOST + receptor?.image || ''}
-        title={`${receptor?.firstname} ${receptor?.lastname}`}
-        isDark={false}
-      />
+      <AppContentHeader avatarImage={Icon} title={`Chat AI`} isDark={false} />
       <List ref={containerRef} sx={{ width: '100%', flexGrow: 1, overflowY: 'auto', padding: 2 }}>
         {messages.map((message, index) => (
           <ListItem

@@ -2,7 +2,7 @@ import { lazy } from 'react';
 
 // project imports
 import Loadable from 'ui-component/Loadable';
-import MinimalLayout from 'layout/MinimalLayout';
+import AuthLayout from 'layout/AuthLayout';
 
 // login option 3 routing
 const AuthLogin3 = Loadable(lazy(() => import('views/app/auth/authentication3/Login3')));
@@ -12,7 +12,7 @@ const AuthRegister3 = Loadable(lazy(() => import('views/app/auth/authentication3
 
 const AuthenticationRoutes = {
   path: '/',
-  element: <MinimalLayout />,
+  element: <AuthLayout />,
   children: [
     {
       path: '/login',
