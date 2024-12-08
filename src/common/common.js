@@ -10,8 +10,6 @@ import { OpenAI } from 'openai';
 export const URL = 'http://localhost:3000/';
 export const API_HOST = 'http://localhost:8000/';
 
-//export const URL = process.env.REACT_APP_URL;
-//export const API_HOST = process.env.REACT_APP_URL_API;
 export const URL_API_COHERE = process.env.REACT_APP_API_COHERE_URL;
 export const API_KEY_COHERE_AI = process.env.REACT_APP_COHERE_TOKEN;
 
@@ -32,57 +30,6 @@ export const API_URL_CONVERSATION = API_URL + 'conversation';
 export const API_URL_INTERACCION = API_URL + 'interaccion';
 export const API_URL_ESPECIALISTAS = API_URL + 'especialista';
 export const API_URL_ENFERMEDAD = API_URL + 'enfermedad';
-
-export const API_URL_PRODUCTO = API_URL + 'producto';
-export const API_URL_CATEGORIA = API_URL + 'categoria';
-export const API_URL_PROVEEDOR = API_URL + 'proveedor';
-export const API_URL_CLIENTE = API_URL + 'cliente';
-export const API_URL_LOCAL = API_URL + 'negocio';
-export const API_URL_EXISTENCIA = API_URL + 'stock';
-export const API_URL_COMPRA = API_URL + 'compra';
-export const API_URL_DETCOMPRA = API_URL + 'detcompra';
-export const API_URL_VENTA = API_URL + 'venta';
-export const API_URL_DETVENTA = API_URL + 'detventa';
-export const API_URL_CONTACTO = API_URL + 'contacto';
-export const API_URL_DETREPUESTO = API_URL + 'sertecdetrep';
-export const API_URL_MODELOEQUIPO = API_URL + 'modeloequipo';
-export const API_URL_SERVTECNICO = API_URL + 'serviciotecnico';
-export const API_URL_DETSERVTECNICO = API_URL + 'detsertecnico';
-export const API_URL_PRODUCTOSPDF = API_URL + 'productopdf';
-export const API_URL_MODELOAUTOCOMPLETE = API_URL + 'modeloAutocomplete';
-export const API_URL_TRANSACCIONES = API_URL + 'transacciones';
-export const API_URL_INFORME = API_URL + 'informe';
-export const API_URL_DES_INFORME = API_URL + 'informePdf';
-export const API_URL_DES_INGRESO = API_URL + 'ingresoPdf';
-export const API_URL_DES_ENTREGA = API_URL + 'entregaPdf';
-export const API_URL_DES_COTIZACION = API_URL + 'cotizacionPdf';
-export const API_URL_GRETRANSMISSION = API_URL + 'gretransmission';
-export const API_URL_GHOSTRETRANSMISSION = API_URL + 'ghostretransmission';
-export const API_URL_GCOMPANIAS = API_URL + 'gcompanias';
-export const API_URL_GDIVISIONES = API_URL + 'gdivisiones';
-export const API_URL_GLOGS = API_URL + 'log';
-export const API_URL_TDISPOSITIVOS = API_URL + 'tdispositivo';
-export const API_URL_TPOSICIONES = API_URL + 'tposiciones';
-export const API_URL_UBICACION = API_URL + 'ubicacion';
-export const API_URL_GEOCERCAS = API_URL + 'geocercas';
-export const API_URL_GEOCERCASTYPE = API_URL + 'geocercasType';
-export const API_URL_GEOMAPAS = API_URL + 'coordernasgeograficas';
-export const API_URL_POSICIONES = API_URL + 'position';
-export const API_URL_USERTRACCAR = API_URL + 'userstraccar';
-export const API_URL_GEOCOMPANIAS = API_URL + 'geocompanias';
-export const API_URL_GEOCERCAS_UBICACIONES = API_URL + 'geoubi';
-export const API_URL_ICONOS = API_URL + 'icons';
-export const API_URL_ICONOSUPDATE = API_URL + 'iconsUpdate';
-export const API_URL_ICONOSTYPE = API_URL + 'iconsType';
-export const API_URL_ICONOSCOLOR = API_URL + 'iconsColor';
-export const API_URL_IMAGE = API_URL + 'images';
-export const API_URL_IMAGETYPE = API_URL + 'imgType';
-export const API_URL_PLAN = API_URL + 'plans';
-export const API_URL_GPSDETALLE = API_URL + 'typeGps';
-export const API_URL_CHIPDETALLE = API_URL + 'chiPlan';
-export const API_URL_DETALLE = API_URL + 'detail';
-export const API_URL_PLANDETALLE = API_URL + 'Plan';
-export const API_URL_ICONODETALLE = API_URL + 'Iconos';
 
 export function convertToQueryStringGET(jsonObject) {
   const queryString = Object.keys(jsonObject)
@@ -366,7 +313,7 @@ export async function descargarDocumento(url, nombreArchivo) {
   }
 }
 export function navigateTo(url) {
-  window.location.href = URL + '#/admin/' + url;
+  window.location.href = URL + '#/' + url;
 }
 
 // Función para formatear la fecha

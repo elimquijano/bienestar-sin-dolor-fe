@@ -7,7 +7,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 
 const CHARACTER_PATH = '/assets/fbx/character/Y Bot.fbx';
 const ANIMATION_PATH = '/assets/fbx/animation/';
-const ANIMATIONS = ['Standing Idle'];
+const ANIMATIONS = ['Waving'];
 
 const ModelViewer = () => {
   const mountRef = useRef(null);
@@ -33,8 +33,8 @@ const ModelViewer = () => {
         sceneRef.current = scene;
         scene.background = new THREE.Color(0x001020);
 
-        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        camera.position.set(0, 2, 5);
+        camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+        camera.position.set(1, 2, 7);
 
         renderer = new THREE.WebGLRenderer({
           antialias: true,

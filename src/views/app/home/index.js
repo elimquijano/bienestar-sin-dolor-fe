@@ -67,7 +67,13 @@ const HomeScreen = () => {
       name: '¿Quieres analizar una radiografía?',
       imageSource: IconXRay,
       onPress: () => redirectToRelativePage('/#/radiografia')
-    }
+    },
+    {
+      id: 4,
+      name: 'XD',
+      imageSource: IconXRay,
+      onPress: () => redirectToRelativePage('/#/pose-detection')
+    },
   ];
   return (
     <Grid container>

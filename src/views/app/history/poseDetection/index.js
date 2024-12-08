@@ -1,33 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
-import Webcam from 'react-webcam';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
 import * as poseDetection from '@tensorflow-models/pose-detection';
-import { Box, Typography, Card, Select, MenuItem } from '@mui/material';
+import { Box, Typography, Card, Button, LinearProgress } from '@mui/material';
 
-const PoseDetectionLogger = () => {
-  const webcamRef = useRef(null); // Referencia a la webcam
-  const canvasRef = useRef(null); // Referencia al canvas para dibujar
+const VideoPoseDetectionLogger = () => {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const detectorRef = useRef(null);
   const [status, setStatus] = useState('Inicializando...');
-  const [videoDevices, setVideoDevices] = useState([]); // Lista de cámaras disponibles
-  const [selectedDeviceId, setSelectedDeviceId] = useState(''); // Cámara seleccionada
-  const detectorRef = useRef(null); // Referencia al detector de poses
-  const [isDetecting, setIsDetecting] = useState(false); // Estado de detección
+  const [progress, setProgress] = useState(0);
+  const [detectedPoses, setDetectedPoses] = useState([]);
 
   useEffect(() => {
-    const getDevices = async () => {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoInputDevices = devices.filter((device) => device.kind === 'videoinput');
-        setVideoDevices(videoInputDevices);
-        if (videoInputDevices.length > 0) {
-          setSelectedDeviceId(videoInputDevices[0].deviceId); // Seleccionar la primera cámara
-        }
-      } catch (err) {
-        console.error('Error al enumerar dispositivos:', err);
-      }
-    };
-
     const initializeDetector = async () => {
       try {
         setStatus('Configurando TensorFlow.js...');
@@ -38,79 +23,89 @@ const PoseDetectionLogger = () => {
         const detector = await poseDetection.createDetector(poseDetection.SupportedModels.MoveNet, {
           modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
         });
-        detectorRef.current = detector; // Almacenar detector
-        setStatus('Listo para detectar poses.');
+        detectorRef.current = detector;
+        setStatus('Listo para detectar poses en video.');
       } catch (err) {
         console.error('Error al inicializar la detección:', err);
+        setStatus('Error al cargar el modelo.');
       }
     };
 
-    getDevices();
     initializeDetector();
   }, []);
 
-  const startPoseDetection = async () => {
-    setIsDetecting(true);
-    setStatus('Iniciando detección de poses...');
+  const processVideo = async (videoElement) => {
+    if (!detectorRef.current) return;
 
-    const detectPose = async () => {
-      if (!webcamRef.current || !detectorRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const detectedFrames = [];
 
-      const video = webcamRef.current.video;
-      const canvas = canvasRef.current;
+    // Reset previous state
+    setDetectedPoses([]);
+    setProgress(0);
 
-      if (video && video.readyState === 4 && canvas) {
-        const poses = await detectorRef.current.estimatePoses(video);
+    const processFrame = async (currentTime) => {
+      return new Promise((resolve) => {
+        videoElement.currentTime = currentTime;
+        
+        videoElement.onseeked = async () => {
+          // Set canvas size to match video
+          canvas.width = videoElement.videoWidth;
+          canvas.height = videoElement.videoHeight;
 
-        if (poses.length > 0) {
-          drawPose(poses[0], canvas, video); // Dibuja la pose detectada
-          setStatus(`Puntos clave detectados: ${poses[0].keypoints.length}`);
-        } else {
-          setStatus('No se detectaron poses.');
-        }
-      }
+          // Clear previous frame
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (isDetecting) {
-        requestAnimationFrame(detectPose);
-      }
+          // Draw video frame
+          ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+          // Detect pose
+          try {
+            const poses = await detectorRef.current.estimatePoses(canvas);
+            
+            if (poses.length > 0) {
+              const pose = poses[0];
+              
+              // Store frame data
+              detectedFrames.push({
+                frameTime: currentTime,
+                pose: pose
+              });
+
+              // Draw pose
+              drawPose(pose, canvas);
+            }
+          } catch (error) {
+            console.error('Error detecting pose:', error);
+          }
+
+          resolve();
+        };
+      });
     };
 
-    detectPose();
-  };
-
-  const handleCameraChange = (deviceId) => {
-    setSelectedDeviceId(deviceId);
-    stopPoseDetection(); // Detenemos la detección actual
-    setStatus('Cambiando de cámara...');
-    setTimeout(() => {
-      startPoseDetection(); // Reinicia la detección con la nueva cámara
-    }, 1000); // Le damos tiempo a la cámara para inicializarse
-  };
-
-  const stopPoseDetection = () => {
-    setIsDetecting(false);
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpia el canvas
+    // Process every second of the video
+    for (let time = 0; time < videoElement.duration; time += 1) {
+      await processFrame(time);
+      
+      // Update progress
+      const progressPercentage = Math.floor((time / videoElement.duration) * 100);
+      setProgress(progressPercentage);
     }
-    setStatus('Detección pausada.');
+
+    // Log detected poses
+    console.log('Detected Poses:', detectedFrames);
+    setDetectedPoses(detectedFrames);
+    setStatus(`Detección completada. ${detectedFrames.length} frames procesados.`);
   };
 
-  const drawPose = (pose, canvas, video) => {
+  const drawPose = (pose, canvas) => {
     const ctx = canvas.getContext('2d');
 
-    // Configurar tamaño del canvas para que coincida con el video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Limpia el canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Dibuja puntos clave
+    // Draw keypoints
     pose.keypoints.forEach((keypoint) => {
       if (keypoint.score > 0.5) {
-        // Filtra puntos con baja confianza
         ctx.beginPath();
         ctx.arc(keypoint.x, keypoint.y, 5, 0, 2 * Math.PI);
         ctx.fillStyle = 'red';
@@ -118,7 +113,7 @@ const PoseDetectionLogger = () => {
       }
     });
 
-    // Dibuja conexiones entre puntos clave
+    // Draw connections
     const connections = poseDetection.util.getAdjacentPairs(poseDetection.SupportedModels.MoveNet);
     connections.forEach(([startIdx, endIdx]) => {
       const start = pose.keypoints[startIdx];
@@ -135,42 +130,60 @@ const PoseDetectionLogger = () => {
     });
   };
 
-  useEffect(() => {
-    if (selectedDeviceId) {
-      startPoseDetection();
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const videoURL = URL.createObjectURL(file);
+      videoRef.current.src = videoURL;
+      
+      videoRef.current.onloadedmetadata = () => {
+        setStatus('Video cargado. Iniciando detección de poses...');
+        processVideo(videoRef.current);
+      };
     }
-  }, [selectedDeviceId]);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Detección de Poses en Tiempo Real
+        Detección de Poses en Video
       </Typography>
 
-      {videoDevices.length > 1 && (
-        <Select value={selectedDeviceId} onChange={(e) => handleCameraChange(e.target.value)} sx={{ mb: 2, width: '300px' }}>
-          {videoDevices.map((device) => (
-            <MenuItem key={device.deviceId} value={device.deviceId}>
-              {device.label || `Cámara ${device.deviceId}`}
-            </MenuItem>
-          ))}
-        </Select>
-      )}
+      <Button 
+        variant="contained" 
+        component="label" 
+        sx={{ mb: 2 }}
+      >
+        Subir Video
+        <input 
+          type="file" 
+          hidden 
+          accept="video/*" 
+          onChange={handleFileUpload}
+        />
+      </Button>
 
-      <Card sx={{ position: 'relative', mt: 4, width: 640, height: 480, overflow: 'hidden' }}>
-        <Webcam
-          ref={webcamRef}
-          audio={false}
+      <LinearProgress 
+        variant="determinate" 
+        value={progress} 
+        sx={{ width: '100%', mb: 2 }}
+      />
+
+      <Card sx={{ position: 'relative', width: 640, height: 480, overflow: 'hidden' }}>
+        <video
+          ref={videoRef}
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: '100%',
             height: '100%',
-            transform: 'scaleX(-1)' // Refleja el video para la experiencia del usuario
+            display: 'none'
           }}
-          videoConstraints={{ deviceId: selectedDeviceId }} // Cámara seleccionada
-        />
+          controls={false}
+        >
+          <track kind="captions" />
+        </video>
         <canvas
           ref={canvasRef}
           style={{
@@ -187,8 +200,17 @@ const PoseDetectionLogger = () => {
       <Typography variant="body1" sx={{ color: 'text.secondary', mt: 2 }}>
         {status}
       </Typography>
+
+      {detectedPoses.length > 0 && (
+        <Box sx={{ mt: 2, width: '100%' }}>
+          <Typography variant="h6">
+            Detalle de Poses Detectadas
+          </Typography>
+          <pre>{JSON.stringify(detectedPoses, null, 2)}</pre>
+        </Box>
+      )}
     </Box>
   );
 };
 
-export default PoseDetectionLogger;
+export default VideoPoseDetectionLogger;
