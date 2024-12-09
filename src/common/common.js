@@ -7,8 +7,8 @@ import { OpenAI } from 'openai';
 // export const URL = process.env.REACT_APP_URL;
 //export const API_HOST = process.env.REACT_APP_URL_API; // REAL URL
 //------------ CONEXIONES AL SERVER LOCAL --------------------
-export const URL = 'http://localhost:3000/';
-export const API_HOST = 'http://localhost:8000/';
+export const URL = 'https://elimpruebasapi.nwperu.com/';
+export const API_HOST = 'https://elimpruebasapi.nwperu.com/';
 
 export const URL_API_COHERE = process.env.REACT_APP_API_COHERE_URL;
 export const API_KEY_COHERE_AI = process.env.REACT_APP_COHERE_TOKEN;
@@ -16,7 +16,7 @@ export const API_KEY_COHERE_AI = process.env.REACT_APP_COHERE_TOKEN;
 export const URL_API_HF = process.env.REACT_APP_API_HF_URL;
 export const API_KEY_HF = process.env.REACT_APP_HF_TOKEN;
 
-export const URL_API_CLASSIFIER = 'http://127.0.0.1:5000/predict';
+export const URL_API_CLASSIFIER = 'http://127.0.0.1:5010/predict';
 
 export const API_URL = API_HOST + 'api/';
 export const API_URL_LOGIN = API_URL + 'login';
@@ -30,6 +30,7 @@ export const API_URL_CONVERSATION = API_URL + 'conversation';
 export const API_URL_INTERACCION = API_URL + 'interaccion';
 export const API_URL_ESPECIALISTAS = API_URL + 'especialista';
 export const API_URL_ENFERMEDAD = API_URL + 'enfermedad';
+export const API_URL_RADIOGRAFIA = API_URL + 'radiografia';
 
 export function convertToQueryStringGET(jsonObject) {
   const queryString = Object.keys(jsonObject)

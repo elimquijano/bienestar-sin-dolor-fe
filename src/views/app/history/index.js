@@ -8,11 +8,11 @@ const buttons = [
     id: 1,
     name: 'Dislocación de Primer Grado',
     percent: 60,
-    onPress: () => redirectToRelativePage('/#/my-lesson/1')
+    onPress: () => redirectToRelativePage('/#/tratamientos/1')
   }
 ];
 
-const HistoryScreen = () => {
+const TratamientosScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredButtons, setFilteredButtons] = useState(buttons);
 
@@ -53,4 +53,4 @@ const HistoryScreen = () => {
   );
 };
 
-export default HistoryScreen;
+export default TratamientosScreen;

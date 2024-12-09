@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Button, Paper, Typography, IconButton } from '@mui/material';
-import { CameraAlt, Send, HideImage, Image, FlipCameraAndroid, Camera, NoPhotography } from '@mui/icons-material';
+import { Box, Button, Paper, Typography, IconButton, Grid, LinearProgress } from '@mui/material';
+import { CameraAlt, HideImage, Image, FlipCameraAndroid, Camera, NoPhotography, Circle } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
-import { URL_API_CLASSIFIER } from 'common/common';
+import { API_URL_RADIOGRAFIA, getSession, URL_API_CLASSIFIER } from 'common/common';
 
 const ImageClassifier = () => {
   const theme = useTheme();
@@ -13,6 +13,7 @@ const ImageClassifier = () => {
   const [devices, setDevices] = useState([]);
   const [currentDeviceId, setCurrentDeviceId] = useState(null);
   const [apiResults, setApiResults] = useState(null);
+  const [isSend, setIsSend] = useState(false);
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -123,155 +124,204 @@ const ImageClassifier = () => {
 
   // Enviar imagen a la API
   const sendImageToAPI = async () => {
+    setIsSend(true);
     const imageToSend = capturedImage || image;
 
     if (!imageToSend) return;
 
     try {
-      // Simular llamada a API (reemplazar con tu endpoint real)
+      const formData = new FormData();
+      const blob = await (await fetch(imageToSend)).blob();
+      const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+      formData.append('image', file);
+
       const response = await fetch(URL_API_CLASSIFIER, {
         method: 'POST',
-        body: JSON.stringify({ image: imageToSend }),
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        body: formData
       });
 
       const results = await response.json();
       setApiResults(results);
+      if (results?.success) {
+        formData.append('user_id', getSession('USER_SESSION')?.id);
+        formData.append('result', JSON.stringify(results));
+
+        await fetch(API_URL_RADIOGRAFIA, {
+          method: 'POST',
+          body: formData
+        });
+      }
     } catch (error) {
       console.error('Error enviando imagen:', error);
       setApiResults({ error: 'No se pudo clasificar la imagen' });
+    } finally {
+      setIsSend(false);
     }
+  };
+
+  const cleanChanges = (type) => {
+    setApiResults(null);
+    setCapturedImage(null);
+    setImage(null);
+    setMode(type);
   };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', backgroundColor: theme.palette.grey[100], height: '100vh' }}>
       <AppContentHeader style={{ position: 'fixed', width: '100%', zIndex: 1 }} />
       <Box sx={{ flexGrow: 1, overflowY: 'auto', padding: 2 }}>
-        <Paper sx={{ padding: 2 }}>
-          {/* Contenedor de imagen/cámara */}
-          <Box
-            sx={{
-              width: '100%',
-              height: 300,
-              bgcolor: 'rgba(255,255,255,0.1)',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              borderRadius: 2
-            }}
-            onClick={() => mode === 'file' && fileInputRef.current.click()}
-          >
-            <canvas
-              ref={canvasRef}
-              style={{
-                display: mode === 'camera' && !capturedImage ? 'block' : 'none',
-                width: '240px',
-                height: '240px',
-                objectFit: 'contain'
-              }}
-              aria-label="Vista de la cámara"
-            />
-
-            {(mode === 'file' || capturedImage) && (
-              <img
-                src={capturedImage || image}
-                alt="Pulse aquí para seleccionar una imagen"
-                style={{
-                  maxWidth: '240px',
-                  maxHeight: '240px',
-                  objectFit: 'contain'
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <Paper sx={{ padding: 2 }}>
+              {/* Contenedor de imagen/cámara */}
+              <Box
+                sx={{
+                  width: '100%',
+                  height: 300,
+                  bgcolor: 'rgba(255,255,255,0.1)',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  borderRadius: 2
                 }}
-              />
-            )}
+                onClick={() => mode === 'file' && fileInputRef.current.click()}
+              >
+                <canvas
+                  ref={canvasRef}
+                  style={{
+                    display: mode === 'camera' && !capturedImage ? 'block' : 'none',
+                    width: '240px',
+                    height: '240px',
+                    objectFit: 'contain'
+                  }}
+                  aria-label="Vista de la cámara"
+                />
 
-            {/* Input oculto para archivos */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              accept="image/*"
-              onChange={handleFileUpload}
-              aria-label="Seleccionar archivo de imagen"
-            />
-          </Box>
+                {(mode === 'file' || capturedImage) && (
+                  <img
+                    src={capturedImage || image}
+                    alt="Pulse aquí para seleccionar una imagen"
+                    style={{
+                      maxWidth: '240px',
+                      maxHeight: '240px',
+                      objectFit: 'contain'
+                    }}
+                  />
+                )}
 
-          {/* Controles */}
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: 2,
-              mt: 2
-            }}
-          >
-            {/* Botón de archivo */}
-            <Button
-              variant="contained"
-              color={mode === 'file' ? 'primary' : 'secondary'}
-              onClick={() => {
-                setCapturedImage(null);
-                setImage(null);
-                setMode('file');
+                {/* Input oculto para archivos */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  aria-label="Seleccionar archivo de imagen"
+                />
+              </Box>
+
+              {/* Controles */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: 2,
+                  mt: 2
+                }}
+              >
+                {/* Botón de archivo */}
+                <Button
+                  variant="contained"
+                  color={mode === 'file' ? 'primary' : 'secondary'}
+                  onClick={() => cleanChanges('file')}
+                  aria-label="Modo de selección de archivo"
+                >
+                  {image ? <HideImage /> : <Image />}
+                </Button>
+
+                {/* Botón de cámara */}
+                <Button
+                  variant="contained"
+                  color={mode === 'camera' ? 'primary' : 'secondary'}
+                  onClick={() => cleanChanges('camera')}
+                  aria-label="Modo de cámara"
+                >
+                  {capturedImage ? <NoPhotography /> : <CameraAlt />}
+                </Button>
+
+                {mode === 'camera' && (
+                  <>
+                    {/* Cambiar cámara */}
+                    <IconButton color="primary" onClick={switchCamera} aria-label="Cambiar dispositivo de cámara">
+                      <FlipCameraAndroid />
+                    </IconButton>
+
+                    {/* Capturar foto o enviar */}
+                    <IconButton color="primary" onClick={capturePhoto} aria-label={'Capturar foto'}>
+                      <Camera />
+                    </IconButton>
+                  </>
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'center', paddingTop: 2 }}>
+                {(capturedImage || image) && (
+                  <Button variant="contained" color="success" onClick={sendImageToAPI} disabled={isSend}>
+                    {isSend ? 'Clasificando...' : 'Clasificar'}
+                  </Button>
+                )}
+              </Box>
+            </Paper>
+          </Grid>
+          {/* Resultados de la API */}
+          <Grid item xs={12} sm={6}>
+            <Paper
+              sx={{
+                p: 2,
+                width: '100%'
               }}
-              aria-label="Modo de selección de archivo"
             >
-              {image ? <HideImage /> : <Image />}
-            </Button>
-
-            {/* Botón de cámara */}
-            <Button
-              variant="contained"
-              color={mode === 'camera' ? 'primary' : 'secondary'}
-              onClick={() => {
-                setCapturedImage(null);
-                setImage(null);
-                setMode('camera');
-              }}
-              aria-label="Modo de cámara"
-            >
-              {capturedImage ? <NoPhotography /> : <CameraAlt />}
-            </Button>
-
-            {mode === 'camera' && (
-              <>
-                {/* Cambiar cámara */}
-                <IconButton color="primary" onClick={switchCamera} aria-label="Cambiar dispositivo de cámara">
-                  <FlipCameraAndroid />
-                </IconButton>
-
-                {/* Capturar foto o enviar */}
-                <IconButton color="primary" onClick={capturePhoto} aria-label={'Capturar foto'}>
-                  <Camera />
-                </IconButton>
-              </>
-            )}
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'center', paddingTop: 2 }}>
-            {(capturedImage || image) && (
-              <Button variant="contained" color="success" onClick={sendImageToAPI}>
-                <Send /> Clasificar
-              </Button>
-            )}
-          </Box>
-        </Paper>
-        {/* Resultados de la API */}
-        {apiResults && (
-          <Paper
-            elevation={3}
-            sx={{
-              mt: 2,
-              p: 2,
-              width: '100%'
-            }}
-          >
-            <Typography variant="h6">Resultados de Clasificación</Typography>
-            <pre>{JSON.stringify(apiResults, null, 2)}</pre>
-          </Paper>
-        )}
+              <Grid container spacing={4}>
+                <Grid item xs={12} className={'text-center'}>
+                  <Typography sx={{ fontWeight: 'bold', marginBottom: 2, fontSize: 48, color: theme.palette.secondary.main }}>
+                    {apiResults?.confidence || '--'}%
+                  </Typography>
+                  <Typography variant="body1" sx={{ textAlign: 'center', marginBottom: 4 }}>
+                    {apiResults
+                      ? apiResults?.success
+                        ? `de la imagen probablemente sea una radiografía de una ${apiResults?.predictedClass}`
+                        : apiResults?.message
+                      : 'de la imagen probablemente sea una radiografía de una --'}
+                  </Typography>
+                  <LinearProgress
+                    sx={{ height: 20, borderRadius: 5 }}
+                    color="secondary"
+                    variant="determinate"
+                    value={apiResults?.confidence || 0}
+                  />
+                </Grid>
+                <Grid item xs={12} spacing={2}>
+                  {apiResults?.allProbabilities?.map((res, index) => {
+                    return (
+                      <Grid key={index} container sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Circle color={res?.class == apiResults?.predictedClass ? 'secondary' : 'inherit'} />
+                        <Typography>Radiografía de una {res?.class || ''}</Typography>
+                        <LinearProgress
+                          sx={{ height: 5, borderRadius: 2, flexGrow: 1, margin: 2 }}
+                          color={res?.class == apiResults?.predictedClass ? 'secondary' : 'inherit'}
+                          variant="determinate"
+                          value={res?.probability || 0}
+                        />
+                        <Typography>{res?.probability || 0}%</Typography>
+                      </Grid>
+                    );
+                  })}
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
       </Box>
     </Box>
   );

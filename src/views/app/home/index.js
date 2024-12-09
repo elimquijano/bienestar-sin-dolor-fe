@@ -60,19 +60,13 @@ const HomeScreen = () => {
       id: 2,
       name: '¿Ya tienes tu descarte?',
       imageSource: IconDoubts,
-      onPress: () => redirectToRelativePage('/#/tratamientos')
+      onPress: () => redirectToRelativePage('/#/enfermedades')
     },
     {
       id: 3,
       name: '¿Quieres analizar una radiografía?',
       imageSource: IconXRay,
       onPress: () => redirectToRelativePage('/#/radiografia')
-    },
-    {
-      id: 4,
-      name: 'XD',
-      imageSource: IconXRay,
-      onPress: () => redirectToRelativePage('/#/pose-detection')
     },
   ];
   return (

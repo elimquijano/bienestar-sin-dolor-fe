@@ -5,7 +5,7 @@ import CustomizedTimeline from 'ui-component/timeline/CustomizationTimeline';
 import { Check } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 
-const LessonScreen = () => {
+const PlanTratamientoScreen = () => {
   const theme = useTheme();
   const daysPerweek = 4;
   const lessons = [
@@ -47,4 +47,4 @@ const LessonScreen = () => {
   );
 };
 
-export default LessonScreen;
+export default PlanTratamientoScreen;

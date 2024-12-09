@@ -1,40 +1,35 @@
-import { Pause, PlayArrow, Rotate90DegreesCcw, Shuffle } from '@mui/icons-material';
-import { Button, Card } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
+import { PlayArrow, Pause } from '@mui/icons-material';
+import { Button, Card } from '@mui/material';
 
-const CHARACTER_PATH = '/assets/fbx/character/Y Bot.fbx';
-const ANIMATION_PATH = '/assets/fbx/animation/';
-const ANIMATIONS = ['Waving'];
-
-const ModelViewer = () => {
+const ModelViewer = ({ characterPath = '/assets/fbx/character/avatar.fbx', animationPath = '/assets/fbx/animation/', animationName }) => {
   const mountRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentAnimationIndex, setCurrentAnimationIndex] = useState(0);
   const mixerRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
-  const actionsRef = useRef([]);
+  const actionRef = useRef(null);
   const [error, setError] = useState(null);
   const sceneRef = useRef(null);
   const characterRef = useRef(null);
 
   useEffect(() => {
     let scene, camera, renderer, controls;
+    let animationFrame;
 
     const init = () => {
       try {
-        console.log('Configurando escena...');
         const width = mountRef.current.clientWidth;
-        const height = 600;
+        const height = width * 0.75; // 4:3 aspect ratio for responsiveness
 
         scene = new THREE.Scene();
         sceneRef.current = scene;
-        scene.background = new THREE.Color(0x001020);
+        scene.background = new THREE.Color(0xd3d3d3);
 
-        camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-        camera.position.set(1, 2, 7);
+        camera = new THREE.PerspectiveCamera(80, width / height, 0.1, 1000);
+        camera.position.set(0, 0, 2);
 
         renderer = new THREE.WebGLRenderer({
           antialias: true,
@@ -42,10 +37,8 @@ const ModelViewer = () => {
         });
         renderer.setSize(width, height);
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         mountRef.current.appendChild(renderer.domElement);
 
-        // Mejorada la iluminación basada en el ejemplo
         const sunLight = new THREE.DirectionalLight(0xffffff, 5);
         sunLight.position.set(2, 4, 3);
         sunLight.castShadow = true;
@@ -53,18 +46,6 @@ const ModelViewer = () => {
 
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
         scene.add(hemiLight);
-
-        // Añadir plano base
-        const radius = 10;
-        const geometry = new THREE.CircleGeometry(radius, 32);
-        const material = new THREE.MeshStandardMaterial({
-          color: 0x001020
-        });
-        const plane = new THREE.Mesh(geometry, material);
-        plane.rotation.x = Math.PI * -0.5;
-        plane.receiveShadow = true;
-        plane.position.y = -1.5;
-        scene.add(plane);
 
         controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
@@ -74,49 +55,36 @@ const ModelViewer = () => {
 
         return { scene, camera, renderer, controls };
       } catch (e) {
-        console.error('Error en init:', e);
-        setError(`Error de inicialización: ${e.message}`);
+        console.error('Error in init:', e);
+        setError(`Initialization error: ${e.message}`);
         return null;
       }
     };
 
-    const loadModelAndAnimations = async (sceneSetup) => {
-      if (!sceneSetup) return;
+    const loadModelAndAnimation = async (sceneSetup) => {
+      if (!sceneSetup || !animationName) return;
 
       const { scene } = sceneSetup;
       const loader = new FBXLoader();
 
       try {
-        // Cargar el personaje
-        console.log('Cargando personaje...');
+        // Load character
         const character = await new Promise((resolve, reject) => {
           loader.load(
-            CHARACTER_PATH,
+            characterPath,
             (fbx) => {
-              fbx.scale.setScalar(0.02); // Escala como en el ejemplo
+              fbx.scale.setScalar(0.02);
               fbx.position.set(0, -1.5, 0);
 
               fbx.traverse((child) => {
                 if (child.isMesh) {
                   child.castShadow = true;
                   child.receiveShadow = true;
-
-                  // Opcionalmente, aplicar material personalizado como en el ejemplo
-                  // if (child.material.name === "Alpha_Body_MAT") {
-                  //   child.material = new THREE.MeshMatcapMaterial({
-                  //     matcap: textureLoader.load("/assets/textures/matcap.jpg")
-                  //   });
-                  // }
                 }
               });
               resolve(fbx);
             },
-            (progress) => {
-              if (progress.total > 0) {
-                const percentComplete = (progress.loaded / progress.total) * 100;
-                console.log(`Cargando personaje: ${Math.round(percentComplete)}%`);
-              }
-            },
+            undefined,
             reject
           );
         });
@@ -124,43 +92,22 @@ const ModelViewer = () => {
         characterRef.current = character;
         scene.add(character);
 
-        // Crear mixer
+        // Create mixer
         mixerRef.current = new THREE.AnimationMixer(character);
 
-        // Cargar todas las animaciones
-        console.log('Cargando animaciones...');
-        const loadedAnimations = await Promise.all(
-          ANIMATIONS.map(async (animName) => {
-            try {
-              const animData = await new Promise((resolve, reject) => {
-                loader.load(`${ANIMATION_PATH}${animName}.fbx`, (fbx) => resolve(fbx.animations[0]), undefined, reject);
-              });
-              animData.name = animName;
-              return animData;
-            } catch (err) {
-              console.warn(`Error loading animation ${animName}:`, err);
-              return null;
-            }
-          })
-        );
-
-        // Filtrar animaciones que se cargaron correctamente y crear actions
-        const validAnimations = loadedAnimations.filter((anim) => anim !== null);
-        actionsRef.current = validAnimations.map((anim) => {
-          const action = mixerRef.current.clipAction(anim);
-          return action;
+        // Load specific animation
+        const animationData = await new Promise((resolve, reject) => {
+          loader.load(`${animationPath}${animationName}.fbx`, (fbx) => resolve(fbx.animations[0]), undefined, reject);
         });
 
-        if (actionsRef.current.length > 0) {
-          // Iniciar con la primera animación
-          playAnimation(0);
-        }
-
-        console.log('');
+        // Create action but don't play immediately
+        actionRef.current = mixerRef.current.clipAction(animationData);
+        actionRef.current.paused = true;
+        actionRef.current.setEffectiveTimeScale(0);
+        actionRef.current.setEffectiveWeight(1);
       } catch (error) {
-        console.error('Error al cargar:', error);
-        setError(`Error al cargar: ${error.message || 'Error desconocido'}`);
-        console.log('');
+        console.error('Loading error:', error);
+        setError(`Loading error: ${error.message || 'Unknown error'}`);
       }
     };
 
@@ -169,7 +116,7 @@ const ModelViewer = () => {
 
       const { controls, renderer, scene, camera } = sceneSetup;
 
-      const animationFrame = requestAnimationFrame(() => animate(sceneSetup));
+      animationFrame = requestAnimationFrame(() => animate(sceneSetup));
 
       if (mixerRef.current && isPlaying) {
         const delta = clockRef.current.getDelta();
@@ -183,19 +130,19 @@ const ModelViewer = () => {
     };
 
     const sceneSetup = init();
-    let animationFrame;
 
     if (sceneSetup) {
-      loadModelAndAnimations(sceneSetup);
+      loadModelAndAnimation(sceneSetup);
       animationFrame = animate(sceneSetup);
     }
 
+    // Responsive resize
     const handleResize = () => {
       if (!sceneSetup) return;
 
       const { camera, renderer } = sceneSetup;
       const width = mountRef.current.clientWidth;
-      const height = 600;
+      const height = width * 0.75;
 
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
@@ -217,62 +164,49 @@ const ModelViewer = () => {
         mixerRef.current.stopAllAction();
       }
     };
-  }, [isPlaying]);
-
-  const playAnimation = (index) => {
-    if (!actionsRef.current[index]) return;
-
-    // Hacer fade out de la animación anterior
-    if (actionsRef.current[currentAnimationIndex]) {
-      actionsRef.current[currentAnimationIndex].fadeOut(0.5);
-    }
-
-    // Iniciar nueva animación con fade in
-    const newAction = actionsRef.current[index];
-    newAction.reset();
-    newAction.fadeIn(0.5);
-    newAction.play();
-
-    setCurrentAnimationIndex(index);
-    setIsPlaying(true);
-  };
+  }, [characterPath, animationPath, animationName]);
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    if (mixerRef.current) {
-      mixerRef.current.timeScale = isPlaying ? 0 : 1;
-    }
-  };
+    if (!actionRef.current) return;
 
-  const handleReset = () => {
-    if (mixerRef.current) {
-      playAnimation(currentAnimationIndex);
+    if (!isPlaying) {
+      // First play or resume
+      if (!actionRef.current.isRunning()) {
+        actionRef.current.reset();
+        actionRef.current.play();
+      } else {
+        actionRef.current.paused = false;
+      }
+      setIsPlaying(true);
+    } else {
+      // Pause
+      actionRef.current.paused = true;
       setIsPlaying(false);
     }
   };
 
-  const handleRandomAnimation = () => {
-    const newIndex = Math.floor(Math.random() * actionsRef.current.length);
-    playAnimation(newIndex);
+  const handleReset = () => {
+    if (actionRef.current) {
+      actionRef.current.reset();
+      actionRef.current.paused = true;
+      setIsPlaying(false);
+    }
   };
 
   return (
-    <Card className="p-4 w-full max-w-6xl mx-auto">
-      <div className="h-[600px] relative" ref={mountRef}>
+    <Card className="w-full max-w-4xl mx-auto">
+      <div className="relative w-full" ref={mountRef} style={{ aspectRatio: '4/3' }}>
         {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-opacity-90 bg-white">
-            <p className={`text-center ${error ? 'text-red-600' : 'text-blue-600'}`}>{error}</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90">
+            <p className="text-red-600 text-center">{error}</p>
           </div>
         )}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white/80 p-2 rounded-lg">
-          <Button onClick={handlePlayPause} variant="default" disabled={!!error} size="sm">
-            {isPlaying ? <Pause className="h-4 w-4" /> : <PlayArrow className="h-4 w-4" />}
+          <Button onClick={handlePlayPause} variant="contained" disabled={!!error} size="small">
+            {isPlaying ? <Pause /> : <PlayArrow />}
           </Button>
-          <Button onClick={handleReset} variant="default" disabled={!!error} size="sm">
-            <Rotate90DegreesCcw className="h-4 w-4" />
-          </Button>
-          <Button onClick={handleRandomAnimation} variant="default" disabled={!!error} size="sm">
-            <Shuffle className="h-4 w-4" />
+          <Button onClick={handleReset} variant="contained" disabled={!!error} size="small">
+            Reset
           </Button>
         </div>
       </div>

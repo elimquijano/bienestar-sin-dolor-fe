@@ -3,15 +3,14 @@ import { lazy } from 'react';
 // project imports
 import MinimalLayout from 'layout/MinimalLayout';
 import Loadable from 'ui-component/Loadable';
-import WebcamCapture from 'ui-component/camera';
 
 const AccountScreen = Loadable(lazy(() => import('views/app/account')));
-const LessonScreen = Loadable(lazy(() => import('views/app/history/lessons')));
 const ChatScreen = Loadable(lazy(() => import('views/app/home/consulta/chat')));
 const VoiceChatScreen = Loadable(lazy(() => import('views/app/home/consulta/chatvoz')));
 const VoiceChatWebScreen = Loadable(lazy(() => import('views/app/home/consulta/chatvozweb')));
-const TratamientoScreen = Loadable(lazy(() => import('views/app/home/descarte')));
-const Model = Loadable(lazy(() => import('ui-component/animation')));
+const EnfermedadesScreen = Loadable(lazy(() => import('views/app/home/descarte')));
+const TratamientosScreen = Loadable(lazy(() => import('views/app/history/tratamiento')));
+const LeccionScreen = Loadable(lazy(() => import('views/app/history/tratamiento/leccion')));
 const ImageClassifierPage = Loadable(lazy(() => import('views/app/home/radiografia')));
 const PoseDetectionPage = Loadable(lazy(() => import('views/app/history/poseDetection')));
 
@@ -36,16 +35,16 @@ const AppContentRoutes = {
       element: <AccountScreen />
     },
     {
-      path: '/tratamientos',
-      element: <TratamientoScreen />
+      path: '/enfermedades',
+      element: <EnfermedadesScreen />
     },
     {
-      path: '/camera',
-      element: <WebcamCapture />
+      path: '/tratamientos/:id',
+      element: <TratamientosScreen />
     },
     {
-      path: '/animate',
-      element: <Model />
+      path: '/leccion/:id',
+      element: <LeccionScreen />
     },
     {
       path: '/radiografia',
@@ -55,10 +54,6 @@ const AppContentRoutes = {
       path: '/pose-detection',
       element: <PoseDetectionPage />
     },
-    {
-      path: '/my-lesson/:id',
-      element: <LessonScreen />
-    }
   ]
 };
 

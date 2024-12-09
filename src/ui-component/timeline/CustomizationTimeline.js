@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import { useTheme } from '@mui/material/styles';
 import { Fab, Grid, Paper, Stack } from '@mui/material';
 import { ArrowForwardIos, Check, EmojiEvents } from '@mui/icons-material';
+import { redirectToRelativePage } from 'common/common';
 
 const Calendar = ({ sessions }) => {
   const allCompleted = sessions.every((obj) => obj.completed === true);
@@ -20,9 +21,7 @@ const Calendar = ({ sessions }) => {
             <Stack direction="row" alignItems="center" justifyContent="space-between">
               <Fab
                 color="secondary"
-                onClick={() => {
-                  console.log(session.id);
-                }}
+                onClick={() => redirectToRelativePage('/#/leccion/'+session.id)}
                 disabled={!session.available}
                 size="small"
               >
