@@ -13,6 +13,7 @@ const TratamientosScreen = Loadable(lazy(() => import('views/app/history/tratami
 const LeccionScreen = Loadable(lazy(() => import('views/app/history/tratamiento/leccion')));
 const ImageClassifierPage = Loadable(lazy(() => import('views/app/home/radiografia')));
 const PoseDetectionPage = Loadable(lazy(() => import('views/app/history/poseDetection')));
+const DaysForWeekend = Loadable(lazy(() => import('views/app/history/seleccion')));
 
 const AppContentRoutes = {
   path: '/',
@@ -54,6 +55,10 @@ const AppContentRoutes = {
       path: '/pose-detection',
       element: <PoseDetectionPage />
     },
+    {
+      path: '/days-for-week/:id',
+      element: <DaysForWeekend />
+    }
   ]
 };
 

@@ -13,6 +13,9 @@
     "@emotion/cache": "^11.9.3",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.0",
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/holistic": "^0.5.1675471629",
     "@mediapipe/pose": "^0.5.1675469404",
     "@mui/icons-material": "^5.15.12",
     "@mui/lab": "^5.0.0-alpha.88",
@@ -55,6 +58,7 @@
     "react-scripts": "^5.0.1",
     "react-webcam": "^7.2.0",
     "redux": "^4.2.0",
+    "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.6.13",
     "three": "^0.169.0",
     "yup": "^0.32.11"

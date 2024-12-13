@@ -3,7 +3,8 @@ import { Box, Button, Paper, Typography, IconButton, Grid, LinearProgress } from
 import { CameraAlt, HideImage, Image, FlipCameraAndroid, Camera, NoPhotography, Circle } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import AppContentHeader from 'layout/MainLayout/HeaderContent';
-import { API_URL_RADIOGRAFIA, getSession, URL_API_CLASSIFIER } from 'common/common';
+import { API_URL_RADIOGRAFIA, getSession, SOCKET_SERVER_URL } from 'common/common';
+import io from 'socket.io-client';
 
 const ImageClassifier = () => {
   const theme = useTheme();
@@ -12,11 +13,13 @@ const ImageClassifier = () => {
   const [capturedImage, setCapturedImage] = useState(null);
   const [devices, setDevices] = useState([]);
   const [currentDeviceId, setCurrentDeviceId] = useState(null);
-  const [apiResults, setApiResults] = useState(null);
+  const [apiResults, setApiResults] = useState({ allProbabilities: [] });
   const [isSend, setIsSend] = useState(false);
+  const lastSentImageRef = useRef(null);
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const websocketRef = useRef(null); // Referencia al WebSocket
 
   // Obtener dispositivos de cámara
   useEffect(() => {
@@ -47,6 +50,73 @@ const ImageClassifier = () => {
 
     return () => stopCamera();
   }, [mode, currentDeviceId]);
+
+  useEffect(() => {
+    // Conectar al servidor Socket.IO
+    websocketRef.current = io(SOCKET_SERVER_URL, {
+      secure: true,
+      rejectUnauthorized: false, // Solo para desarrollo, NO usar en producción
+      transports: ['websocket'] // Forzar websocket
+    });
+
+    websocketRef.current.on('connect', () => {
+      console.log('Conectado al servidor Socket.IO');
+    });
+
+    websocketRef.current.on('predict', (receivedData) => {
+      try {
+        console.log('Datos recibidos:', receivedData);
+        setApiResults(receivedData);
+        itemSave(receivedData);
+      } catch (err) {
+        console.error('Error al procesar el mensaje del servidor:', err);
+      } finally {
+        setIsSend(false);
+      }
+    });
+
+    websocketRef.current.on('disconnect', () => {
+      console.log('Desconectado del servidor Socket.IO');
+    });
+
+    return () => {
+      if (websocketRef.current) {
+        websocketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  const itemSave = async (receivedData) => {
+    if (!lastSentImageRef.current) {
+      console.error('No image found to save');
+      return;
+    }
+
+    const blob = await fetch(lastSentImageRef.current).then((r) => r.blob());
+    const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
+
+    const formData = new FormData();
+    formData.append('user_id', getSession('USER_SESSION')?.id);
+    formData.append('image', file);
+    formData.append('result', JSON.stringify(receivedData));
+
+    try {
+      const response = await fetch(API_URL_RADIOGRAFIA, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const responseData = await response.json();
+      // Manejar la respuesta aquí
+      console.log('Prediction saved successfully', responseData);
+    } catch (error) {
+      console.error('Error al enviar los datos:', error);
+    }
+  };
 
   const startCamera = async () => {
     try {
@@ -122,7 +192,6 @@ const ImageClassifier = () => {
     }
   };
 
-  // Enviar imagen a la API
   const sendImageToAPI = async () => {
     setIsSend(true);
     const imageToSend = capturedImage || image;
@@ -130,31 +199,28 @@ const ImageClassifier = () => {
     if (!imageToSend) return;
 
     try {
-      const formData = new FormData();
       const blob = await (await fetch(imageToSend)).blob();
-      const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-      formData.append('image', file);
-
-      const response = await fetch(URL_API_CLASSIFIER, {
-        method: 'POST',
-        body: formData
+      const base64Image = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
       });
 
-      const results = await response.json();
-      setApiResults(results);
-      if (results?.success) {
-        formData.append('user_id', getSession('USER_SESSION')?.id);
-        formData.append('result', JSON.stringify(results));
+      lastSentImageRef.current = imageToSend;
 
-        await fetch(API_URL_RADIOGRAFIA, {
-          method: 'POST',
-          body: formData
+      // Cambio clave: usar emit en lugar de send
+      if (websocketRef.current && websocketRef.current.connected) {
+        websocketRef.current.emit('predict', {
+          type: 'predict',
+          image: base64Image
         });
+      } else {
+        console.error('Socket no está conectado');
+        setIsSend(false);
       }
     } catch (error) {
       console.error('Error enviando imagen:', error);
-      setApiResults({ error: 'No se pudo clasificar la imagen' });
-    } finally {
       setIsSend(false);
     }
   };
@@ -301,23 +367,26 @@ const ImageClassifier = () => {
                     value={apiResults?.confidence || 0}
                   />
                 </Grid>
-                <Grid item xs={12} spacing={2}>
-                  {apiResults?.allProbabilities?.map((res, index) => {
-                    return (
-                      <Grid key={index} container sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Circle color={res?.class == apiResults?.predictedClass ? 'secondary' : 'inherit'} />
-                        <Typography>Radiografía de una {res?.class || ''}</Typography>
-                        <LinearProgress
-                          sx={{ height: 5, borderRadius: 2, flexGrow: 1, margin: 2 }}
-                          color={res?.class == apiResults?.predictedClass ? 'secondary' : 'inherit'}
-                          variant="determinate"
-                          value={res?.probability || 0}
-                        />
-                        <Typography>{res?.probability || 0}%</Typography>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
+
+                {Array.isArray(apiResults?.allProbabilities) && apiResults.allProbabilities.length > 0 && (
+                  <Grid item xs={12} spacing={2}>
+                    {apiResults.allProbabilities.map((res, index) => {
+                      return (
+                        <Grid key={index} container sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Circle color={res?.class === apiResults?.predictedClass ? 'secondary' : 'inherit'} />
+                          <Typography>Radiografía de una {res?.class || ''}</Typography>
+                          <LinearProgress
+                            sx={{ height: 5, borderRadius: 2, flexGrow: 1, margin: 2 }}
+                            color={res?.class === apiResults?.predictedClass ? 'secondary' : 'inherit'}
+                            variant="determinate"
+                            value={res?.probability || 0}
+                          />
+                          <Typography>{res?.probability || 0}%</Typography>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                )}
               </Grid>
             </Paper>
           </Grid>

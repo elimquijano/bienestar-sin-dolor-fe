@@ -6,7 +6,7 @@ import { Box } from '@mui/material';
 
 const BackgroundSvg = () => {
   return (
-    <Box sx={{ position: 'absolute', height: '100%', width: '100%', zIndex: -1 }}>
+    <Box sx={{ position: 'absolute', minHeight: '100%', width: '100%', zIndex: -1 }}>
       {/* First SVG */}
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style={{ position: 'absolute', width: '100%', top: 0 }}>
         <path

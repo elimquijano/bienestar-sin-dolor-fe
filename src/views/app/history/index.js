@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import { TextField, Grid, Paper, Typography } from '@mui/material';
 import HistoryCard from 'ui-component/cards/HistoryCard';
-import { redirectToRelativePage } from 'common/common';
-
-const buttons = [
-  {
-    id: 1,
-    name: 'Dislocación de Primer Grado',
-    percent: 60,
-    onPress: () => redirectToRelativePage('/#/tratamientos/1')
-  }
-];
+import { API_URL_TRATAMIENTO, getSession, redirectToRelativePage } from 'common/common';
+import { useEffect } from 'react';
 
 const TratamientosScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredButtons, setFilteredButtons] = useState(buttons);
+  const [buttons, setButtons] = useState([]);
+  const [filteredButtons, setFilteredButtons] = useState([]);
+
+  useEffect(() => {
+    fetch(API_URL_TRATAMIENTO + `user?form_user_id=${getSession('USER_SESSION')?.id}`)
+      .then((response) => response.json())
+      .then((data) => {
+        const tratamientos = data?.data || [];
+        const mapeo = tratamientos?.map((t) => {
+          return {
+            id: t.id,
+            name: 'Ejercicios Fisicos para la Gonartrosis',
+            percent: t.progreso_total,
+            onPress: () => redirectToRelativePage('/#/tratamientos/' + t.id)
+          };
+        });
+        setButtons(mapeo);
+        setFilteredButtons(mapeo);
+      })
+      .catch((error) => console.log(error));
+  }, []);
 
   const handleSearchChange = (event) => {
     const query = event.target.value;
@@ -45,7 +57,7 @@ const TratamientosScreen = () => {
           </Grid>
         ) : (
           <Typography align="center" style={{ padding: 12 }}>
-            No hay mensajes disponibles.
+            No hay tratamientos en proceso.
           </Typography>
         )}
       </Grid>

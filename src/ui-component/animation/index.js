@@ -2,18 +2,22 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import { PlayArrow, Pause } from '@mui/icons-material';
-import { Button, Card } from '@mui/material';
+import { PlayArrow, Pause, Stop } from '@mui/icons-material';
+import { Button, Card, Stack } from '@mui/material';
 
-const ModelViewer = ({ characterPath = '/assets/fbx/character/avatar.fbx', animationPath = '/assets/fbx/animation/', animationName }) => {
+const ModelViewer = ({
+  characterPath = `/assets/fbx/character/avatar.fbx`,
+  animationPath = '/assets/fbx/animation/',
+  animationName = 'gsentadilla' // Default to 'Idle'
+}) => {
   const mountRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
   const mixerRef = useRef(null);
   const clockRef = useRef(new THREE.Clock());
   const actionRef = useRef(null);
-  const [error, setError] = useState(null);
   const sceneRef = useRef(null);
   const characterRef = useRef(null);
+  const controlsRef = useRef(null);
 
   useEffect(() => {
     let scene, camera, renderer, controls;
@@ -22,14 +26,14 @@ const ModelViewer = ({ characterPath = '/assets/fbx/character/avatar.fbx', anima
     const init = () => {
       try {
         const width = mountRef.current.clientWidth;
-        const height = width * 0.75; // 4:3 aspect ratio for responsiveness
+        const height = width * 1.5; // 4:3 aspect ratio for responsiveness
 
         scene = new THREE.Scene();
         sceneRef.current = scene;
         scene.background = new THREE.Color(0xd3d3d3);
 
-        camera = new THREE.PerspectiveCamera(80, width / height, 0.1, 1000);
-        camera.position.set(0, 0, 2);
+        camera = new THREE.PerspectiveCamera(100, width / height, 0.1, 1000);
+        camera.position.set(0, 1.5, 2); // Adjusted initial camera position 0, 1.5, 2
 
         renderer = new THREE.WebGLRenderer({
           antialias: true,
@@ -50,13 +54,16 @@ const ModelViewer = ({ characterPath = '/assets/fbx/character/avatar.fbx', anima
         controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.target.set(0, 0, 0);
+        controls.target.set(0, 1, 0); // Adjusted target
+        controls.maxPolarAngle = Math.PI / 2; // Prevent camera from going below ground
+        controls.minDistance = 1; // Minimum zoom distance
+        controls.maxDistance = 10; // Maximum zoom distance
         controls.update();
+        controlsRef.current = controls;
 
         return { scene, camera, renderer, controls };
       } catch (e) {
-        console.error('Error in init:', e);
-        setError(`Initialization error: ${e.message}`);
+        console.log(`Initialization error: ${e.message}`);
         return null;
       }
     };
@@ -100,14 +107,13 @@ const ModelViewer = ({ characterPath = '/assets/fbx/character/avatar.fbx', anima
           loader.load(`${animationPath}${animationName}.fbx`, (fbx) => resolve(fbx.animations[0]), undefined, reject);
         });
 
-        // Create action but don't play immediately
+        // Create action and play immediately
         actionRef.current = mixerRef.current.clipAction(animationData);
-        actionRef.current.paused = true;
-        actionRef.current.setEffectiveTimeScale(0);
-        actionRef.current.setEffectiveWeight(1);
+        actionRef.current.reset();
+        actionRef.current.play();
+        setIsPlaying(true);
       } catch (error) {
-        console.error('Loading error:', error);
-        setError(`Loading error: ${error.message || 'Unknown error'}`);
+        console.log(`Loading error: ${error.message || 'Unknown error'}`);
       }
     };
 
@@ -193,23 +199,21 @@ const ModelViewer = ({ characterPath = '/assets/fbx/character/avatar.fbx', anima
     }
   };
 
+  useState(() => {
+    handleReset();
+  }, []);
+
   return (
     <Card className="w-full max-w-4xl mx-auto">
-      <div className="relative w-full" ref={mountRef} style={{ aspectRatio: '4/3' }}>
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90">
-            <p className="text-red-600 text-center">{error}</p>
-          </div>
-        )}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 bg-white/80 p-2 rounded-lg">
-          <Button onClick={handlePlayPause} variant="contained" disabled={!!error} size="small">
-            {isPlaying ? <Pause /> : <PlayArrow />}
-          </Button>
-          <Button onClick={handleReset} variant="contained" disabled={!!error} size="small">
-            Reset
-          </Button>
-        </div>
-      </div>
+      <div className="relative w-full" ref={mountRef} style={{ aspectRatio: '4/3' }}></div>
+      <Stack flexDirection={'row'} gap={2} justifyContent={'center'} alignItems={'center'}>
+        <Button onClick={handlePlayPause} variant="contained" color="secondary" disabled={isPlaying}>
+          {isPlaying ? <Pause /> : <PlayArrow />}
+        </Button>
+        <Button onClick={handleReset} variant="contained" color="secondary" disabled={!isPlaying}>
+          <Stop />
+        </Button>
+      </Stack>
     </Card>
   );
 };

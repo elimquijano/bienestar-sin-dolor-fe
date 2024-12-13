@@ -26,8 +26,7 @@ const AppBarBottom = () => {
       value={value}
       onChange={handleChange}
       showLabels
-      style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
-      sx={{ display: { xs: 'flex', md: 'none' } }}
+      sx={{ display: { xs: 'flex', md: 'none' }, position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000 }}
     >
       {buttons.map((b, index) => {
         return (

@@ -16,7 +16,7 @@ export const API_KEY_COHERE_AI = process.env.REACT_APP_COHERE_TOKEN;
 export const URL_API_HF = process.env.REACT_APP_API_HF_URL;
 export const API_KEY_HF = process.env.REACT_APP_HF_TOKEN;
 
-export const URL_API_CLASSIFIER = 'http://127.0.0.1:5010/predict';
+export const SOCKET_SERVER_URL = 'https://729f-181-176-85-39.ngrok-free.app';
 
 export const API_URL = API_HOST + 'api/';
 export const API_URL_LOGIN = API_URL + 'login';
@@ -31,6 +31,8 @@ export const API_URL_INTERACCION = API_URL + 'interaccion';
 export const API_URL_ESPECIALISTAS = API_URL + 'especialista';
 export const API_URL_ENFERMEDAD = API_URL + 'enfermedad';
 export const API_URL_RADIOGRAFIA = API_URL + 'radiografia';
+export const API_URL_TRATAMIENTO = API_URL + 'tratamiento';
+export const API_URL_SESION = API_URL + 'sesion';
 
 export function convertToQueryStringGET(jsonObject) {
   const queryString = Object.keys(jsonObject)

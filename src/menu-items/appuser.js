@@ -11,15 +11,15 @@ const icons = {
 
 const appuser = {
   id: 'appuser',
-  title: 'appuser',
-  caption: 'Paginas de App',
+  title: 'Menú Principal',
+  caption: 'Paginas de bienestar sin dolor',
   type: 'group',
   children: [
     {
       id: 'inicio',
       title: 'Inicio',
       type: 'item',
-      url: '/app',
+      url: '/',
       icon: icons.IconHome,
       breadcrumbs: false
     },
@@ -27,7 +27,7 @@ const appuser = {
       id: 'history',
       title: 'Historial',
       type: 'item',
-      url: '/app/history',
+      url: '/history',
       icon: icons.IconHistory,
       breadcrumbs: false
     },
@@ -35,16 +35,8 @@ const appuser = {
       id: 'map',
       title: 'Mapa',
       type: 'item',
-      url: '/app/mapa',
+      url: '/map-web',
       icon: icons.IconMap,
-      breadcrumbs: false
-    },
-    {
-      id: 'account',
-      title: 'Cuenta',
-      type: 'item',
-      url: '/app/account',
-      icon: icons.IconUserCircle,
       breadcrumbs: false
     }
   ]
